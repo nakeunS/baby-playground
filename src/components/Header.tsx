@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { signOut } from '@/app/actions/auth'
 import UserMenu from '@/components/UserMenu'
 
 export default async function Header() {
@@ -16,14 +15,6 @@ export default async function Header() {
       <div>
         {user ? (
           <div className="flex items-center gap-3">
-            {/* <span className="text-sm font-medium text-gray-600">
-              {user.user_metadata?.name || user.user_metadata?.display_name || '사용자'}님
-            </span>
-            <form action={signOut}>
-              <button type="submit" className="text-xs font-bold px-3 py-1.5 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition">
-                로그아웃
-              </button>
-            </form> */}
             <UserMenu userName={user.user_metadata?.name || user.user_metadata?.display_name || '사용자'}/>
           </div>
         ) : (
