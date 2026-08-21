@@ -14,9 +14,19 @@ async function getSupabase() {
 export async function signUp(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
+  const displayName = formData.get('displayName') as string
   const supabase = await getSupabase()
 
-  const { error } = await supabase.auth.signUp({ email, password })
+  const { error } = await supabase.auth.signUp({ 
+    email, 
+    password,
+    options: {
+      data: {
+        display_name: displayName,
+      }
+    }
+  })
+  
   if (error) redirect(`/auth/signup?error=${encodeURIComponent(error.message)}`)
 
   redirect('/auth/onboarding')
@@ -25,12 +35,29 @@ export async function signUp(formData: FormData) {
 export async function signIn(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
+  
+  if ( !email || !password ){
+    redirect("auth/login?error=missing");
+  }
+  
   const supabase = await getSupabase()
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
-  if (error) redirect(`/auth/login?error=${encodeURIComponent(error.message)}`)
+  if( !supabase ){
+    redirect("/auth/login?error=config");
+  }
 
-  redirect('/auth')
+  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) redirect("/auth/login?error=invalid")
+
+  redirect('/')
+}
+
+export async function signOut() {
+  const supabase = await getSupabase()
+  if (supabase) {
+    await supabase.auth.signOut()
+  }
+  redirect('/')
 }
 
 function generateInviteCode() {
