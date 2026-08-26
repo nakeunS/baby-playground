@@ -4,6 +4,9 @@ import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Cropper from 'react-easy-crop'
+import { createBrowserClient } from '@supabase/ssr'
+import { supabaseUrl, supabaseKey } from '@/lib/supabase/config'
+import { createPost } from '@/app/actions/post' // 💡 서버 액션 불러오기
 
 const FILTER_STYLES: Record<string, string> = {
   '원본': 'none',
@@ -52,7 +55,6 @@ export default function GrowthWritePage() {
   const router = useRouter()
   const [step, setStep] = useState(1)
   
-
   const [mediaList, setMediaList] = useState<string[]>([]) 
   const [currentIndex, setCurrentIndex] = useState(0)
   const [croppedImages, setCroppedImages] = useState<string[]>([]) 
@@ -66,6 +68,9 @@ export default function GrowthWritePage() {
   
   const [showRatioMenu, setShowRatioMenu] = useState(false)
   const [showMultiMenu, setShowMultiMenu] = useState(false)
+
+  const [content, setContent] = useState('')
+  const [isUploading, setIsUploading] = useState(false)
   
   const fileInputRef = useRef<HTMLInputElement>(null)
   const multiFileInputRef = useRef<HTMLInputElement>(null)
@@ -102,6 +107,47 @@ export default function GrowthWritePage() {
     else setStep(step - 1)
   }
 
+  const handleShare = async () => {
+    setIsUploading(true)
+    try {
+      const supabase = createBrowserClient(supabaseUrl!, supabaseKey!)
+      const uploadedUrls: string[] = []
+
+      for (let i = 0; i < croppedImages.length; i++) {
+        const response = await fetch(croppedImages[i])
+        const blob = await response.blob()
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.jpg`
+
+        const { error: uploadError } = await supabase.storage
+          .from('family_posts')
+          .upload(fileName, blob, { contentType: 'image/jpeg' })
+
+        if (uploadError) throw uploadError
+        const { data: { publicUrl } } = supabase.storage
+          .from('family_posts')
+          .getPublicUrl(fileName)
+
+        uploadedUrls.push(publicUrl)
+      }
+
+      const finalImageUrl = uploadedUrls.join(',')
+
+      await createPost(finalImageUrl, content)
+
+      alert('게시물이 성공적으로 업로드되었습니다! 🎉')
+      router.push('/growth')
+      router.refresh()
+    } catch (error) {
+      if (error instanceof Error) {
+        alert(`업로드 실패: ${error.message}`)
+      } else {
+        alert('알 수 없는 오류가 발생했습니다.')
+      }
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
   const handleNext = async () => {
     if (step === 2 && mediaList.length > 0) {
       const newCropped = [...mediaList]
@@ -110,16 +156,13 @@ export default function GrowthWritePage() {
         if (cropped) newCropped[currentIndex] = cropped
       }
       setCroppedImages(newCropped)
-      
       setImageFilters(new Array(newCropped.length).fill('원본'))
-      
       setCurrentIndex(0)
       setStep(3)
-    } else if (step < 4) {
-      setStep(step + 1)
-    } else {
-      alert('게시물이 성공적으로 업로드되었습니다! 🎉')
-      router.push('/growth')
+    } else if (step === 3) {
+      setStep(4)
+    } else if (step === 4) {
+      await handleShare()
     }
   }
 
@@ -136,11 +179,15 @@ export default function GrowthWritePage() {
       <div className={`bg-white rounded-xl overflow-hidden flex flex-col shadow-2xl transition-all duration-300 ${step >= 3 ? 'w-full max-w-5xl h-[80vh]' : 'w-full max-w-2xl h-[70vh]'}`}>
         
         <div className="flex items-center justify-between px-4 h-12 border-b border-gray-200 bg-white z-10 shrink-0">
-          <button onClick={handleBack} className="text-xl text-gray-800 hover:text-gray-500 p-1">←</button>
+          <button onClick={handleBack} disabled={isUploading} className="text-xl text-gray-800 hover:text-gray-500 p-1 disabled:opacity-30">←</button>
           <h1 className="font-extrabold text-gray-900 text-base">{getHeaderTitle()}</h1>
           {step === 1 ? <div className="w-6" /> : (
-            <button onClick={handleNext} className="text-amber-500 font-bold text-sm hover:text-amber-600">
-              {step === 4 ? '공유하기' : '다음'}
+            <button 
+              onClick={handleNext} 
+              disabled={isUploading}
+              className="text-amber-500 font-bold text-sm hover:text-amber-600 disabled:opacity-50"
+            >
+              {isUploading ? '공유 중...' : (step === 4 ? '공유하기' : '다음')}
             </button>
           )}
         </div>
@@ -156,9 +203,9 @@ export default function GrowthWritePage() {
           )}
 
           {step === 2 && mediaList.length > 0 && (
+             // ... 기존과 완벽히 동일 (생략 방지를 위해 아래에 그대로 유지)
             <div className="w-full h-full relative bg-black flex items-center justify-center">
               <Cropper image={mediaList[currentIndex]} crop={crop} zoom={zoom} aspect={aspect} onCropChange={setCrop} onCropComplete={onCropComplete} onZoomChange={setZoom} />
-              {/* 좌/우측 하단 메뉴 */}
               <div className="absolute bottom-4 left-4 z-50">
                 {showRatioMenu && (
                   <div className="mb-2 bg-black/80 rounded-lg p-2 flex flex-col gap-1 text-white text-sm shadow-lg">
@@ -245,14 +292,17 @@ export default function GrowthWritePage() {
                 {step === 4 && (
                   <div className="flex flex-col h-full">
                     <div className="flex items-center gap-3 p-4">
-                      <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-lg shadow-inner">👩</div>
-                      <span className="font-bold text-sm text-gray-900">튼튼이 엄마</span>
+                      <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center text-lg shadow-inner">😀</div>
+                      <span className="font-bold text-sm text-gray-900">내 가족 피드에 쓰기</span>
                     </div>
                     <div className="px-4 pb-4 border-b border-gray-100 flex-1">
                       <textarea 
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
                         placeholder="문구 입력..." 
                         className="w-full h-32 resize-none outline-none text-sm text-black placeholder:text-gray-400 bg-transparent"
                         autoFocus
+                        disabled={isUploading}
                       />
                     </div>
                   </div>

@@ -1,5 +1,8 @@
-import { createFamily, joinFamily } from '@/app/actions/auth'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createFamily, joinFamily, updateFamilyName, kickMember } from '@/app/actions/auth'
 import Image from 'next/image'
+import { redirect } from 'next/navigation'
+import InviteGenerator from './InviteGenerator'
 
 export default async function OnboardingPage({
   searchParams,
@@ -7,6 +10,106 @@ export default async function OnboardingPage({
   searchParams: Promise<{ error?: string }>
 }) {
   const { error } = await searchParams
+  
+  // 1. 현재 로그인한 유저 정보 가져오기
+  const supabase = await createSupabaseServerClient()
+  if (!supabase) {
+      redirect(`/auth/login?error=${encodeURIComponent('서버 연결 오류가 발생했습니다.')}`)
+  }
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return null
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select(`
+      *,
+      families ( name )
+    `)
+    .eq('id', user.id)
+    .single()
+
+  const hasFamily = !!profile?.family_id
+  const isOwner = profile?.role === 'owner'
+  const familyName = profile?.families?.name || '우리 가족'
+
+  if (hasFamily) {
+    const { data: members } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('family_id', profile.family_id)
+
+    return (
+      <main className="min-h-screen flex items-center justify-center pt-15 pb-15 bg-[#FFF9F2] p-4">
+        <div className="w-full max-w-md flex flex-col gap-6">
+          <div className="text-center mb-4">
+            <h1 className="text-2xl font-extrabold text-gray-800">{familyName}</h1>
+            <p className="text-sm text-gray-500 mt-1">
+              {isOwner ? '가족 정보를 관리하고 멤버를 초대하세요.' : '우리 가족 멤버 목록입니다.'}
+            </p>
+          </div>
+
+          {isOwner && (
+            <section className="bg-white p-6 rounded-xl border border-amber-200 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-amber-400" />
+              <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                👑 방장 메뉴
+              </h2>
+              
+              {/* 가족 이름 변경 폼 (나중에 서버 액션 연결 필요) */}
+              <form action={updateFamilyName} className="flex gap-2 mb-4">
+                <input 
+                  name="newFamilyName" 
+                  defaultValue={familyName}
+                  required
+                  className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-800 focus:ring-2 focus:ring-amber-300 outline-none"
+                />
+                <button className="px-4 py-2 bg-gray-800 text-white text-sm font-bold rounded-md hover:bg-gray-700">
+                  이름 변경
+                </button>
+              </form>
+              <InviteGenerator/>
+            </section>
+          )}
+
+          <section className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+            <h2 className="text-lg font-bold text-gray-800 mb-4">가족 구성원 ({members?.length}명)</h2>
+            <div className="flex flex-col gap-3">
+              {members?.map((member) => (
+                <div key={member.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold overflow-hidden">
+                      {member.avatar_url ? (
+                        <Image src={member.avatar_url} alt="프사" width={40} height={40} className="object-cover w-full h-full" />
+                      ) : (
+                        member.display_name?.charAt(0) || '익'
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-800 flex items-center gap-1">
+                        {member.display_name}
+                        {member.role === 'owner' && <span className="text-xs bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full">방장</span>}
+                      </p>
+                    </div>
+                  </div>
+
+                  {isOwner && member.id !== user.id && (
+                    <form action={kickMember}>
+                      <input type="hidden" name="memberId" value={member.id}/>
+                      <button type="submit" className="text-xs text-red-500 hover:bg-red-50 px-2 py-1 rounded-md transition-colors">
+                        내보내기
+                      </button>
+                    </form>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main className="min-h-screen flex items-center justify-center pt-15 pb-15 bg-[#FFF9F2] p-4">
