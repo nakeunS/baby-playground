@@ -76,9 +76,7 @@ export default function ProfilePage() {
               {previewUrl ? (
                 <Image src={previewUrl} alt="프로필 사진" width={112} height={112} className="w-full h-full object-cover" />
               ) : (
-                <span className="text-4xl text-amber-500 font-bold">
-                  {displayName ? displayName.charAt(0) : '익'}
-                </span>
+                <Image src="/nomal_profile.png" alt="기본 프로필 사진" width={112} height={112} className="w-full h-full object-cover" />
               )}
             </div>
 
