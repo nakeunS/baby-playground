@@ -6,7 +6,8 @@ import Link from 'next/link'
 import Cropper from 'react-easy-crop'
 import { createBrowserClient } from '@supabase/ssr'
 import { supabaseUrl, supabaseKey } from '@/lib/supabase/config'
-import { createPost } from '@/app/actions/post' // 💡 서버 액션 불러오기
+import { createPost } from '@/app/actions/post'
+import { default as NextImage } from 'next/image'
 
 const FILTER_STYLES: Record<string, string> = {
   '원본': 'none',
@@ -173,7 +174,7 @@ export default function GrowthWritePage() {
   }
 
   return (
-    <main className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+    <main className="fixed inset-0 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
       <Link href="/growth" className="absolute top-4 right-4 sm:top-6 sm:right-8 text-white text-3xl font-light hover:text-gray-300 transition-colors z-50">✕</Link>
 
       <div className={`bg-white rounded-xl overflow-hidden flex flex-col shadow-2xl transition-all duration-300 ${step >= 3 ? 'w-full max-w-5xl h-[80vh]' : 'w-full max-w-2xl h-[70vh]'}`}>
@@ -218,10 +219,10 @@ export default function GrowthWritePage() {
               </div>
               <div className="absolute bottom-4 right-4 z-50">
                 {showMultiMenu && (
-                  <div className="mb-2 bg-black/80 rounded-lg p-3 flex gap-3 overflow-x-auto shadow-lg max-w-[200px] sm:max-w-[300px]">
+                  <div className="mb-2 bg-black/80 rounded-lg p-3 flex gap-3 overflow-x-auto shadow-lg">
                     {mediaList.map((url, idx) => (
                       <div key={idx} onClick={() => setCurrentIndex(idx)} className={`relative w-12 h-12 shrink-0 cursor-pointer border-2 ${currentIndex === idx ? 'border-amber-500' : 'border-transparent'}`}>
-                        <img src={url} className="w-full h-full object-cover rounded-sm" />
+                        <NextImage src={url} alt="이미지" className="w-full h-full object-cover rounded-sm" />
                       </div>
                     ))}
                     <div onClick={() => multiFileInputRef.current?.click()} className="w-12 h-12 shrink-0 border border-dashed border-gray-400 flex items-center justify-center text-gray-400 cursor-pointer">+</div>
@@ -237,7 +238,7 @@ export default function GrowthWritePage() {
             <div className="w-full h-full flex flex-col md:flex-row">
               
               <div className="relative w-full md:w-[60%] h-1/2 md:h-full bg-gray-100 flex items-center justify-center border-b md:border-b-0 md:border-r border-gray-200 group overflow-hidden">
-                <img 
+                <NextImage 
                   src={croppedImages[currentIndex]} 
                   alt="편집 중인 이미지" 
                   className="max-w-full max-h-full object-contain shadow-sm transition-all duration-300" 
@@ -273,7 +274,7 @@ export default function GrowthWritePage() {
                           className="flex flex-col items-center gap-2 cursor-pointer group"
                         >
                           <div className={`aspect-square w-full rounded-md overflow-hidden ${isSelected ? 'border-[3px] border-amber-500' : 'border border-gray-200 group-hover:opacity-80'}`}>
-                            <img 
+                            <NextImage 
                               src={croppedImages[currentIndex]} 
                               alt={filter} 
                               className="w-full h-full object-cover"

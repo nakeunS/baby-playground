@@ -72,7 +72,7 @@ export default function ProfilePage() {
 
         <form onSubmit={handleSubmit} className="flex flex-col items-center gap-6">
           <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-            <div className="w-28 h-28 rounded-full bg-amber-100 border-2 border-amber-200 overflow-hidden flex items-center justify-center flex-shrink-0">
+            <div className="w-28 h-28 rounded-full bg-amber-100 border-2 border-amber-200 overflow-hidden flex items-center justify-center">
               {previewUrl ? (
                 <Image src={previewUrl} alt="프로필 사진" width={112} height={112} className="w-full h-full object-cover" />
               ) : (

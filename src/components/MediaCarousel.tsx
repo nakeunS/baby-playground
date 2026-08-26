@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 
 export default function MediaCarousel({ media }: { media: { type: string, url: string }[] }) {
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -22,7 +23,7 @@ export default function MediaCarousel({ media }: { media: { type: string, url: s
             {item.type === 'video' ? (
               <video src={item.url} className="w-full h-full object-cover" controls playsInline />
             ) : (
-              <img src={item.url} alt={`미디어 ${index + 1}`} className="w-full h-full object-cover" />
+              <Image src={item.url} alt={`미디어 ${index + 1}`} className="w-full h-full object-cover" />
             )}
           </div>
         ))}

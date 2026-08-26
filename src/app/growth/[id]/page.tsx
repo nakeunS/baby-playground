@@ -61,7 +61,7 @@ export default async function GrowthDetailPage({ params }: { params: Promise<{ i
     })
 
   return (
-    <main className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 sm:p-8 backdrop-blur-sm">
+    <main className="fixed inset-0 flex items-center justify-center bg-black/80 p-4 sm:p-8 backdrop-blur-sm">
       <Link 
         href="/growth" 
         className="absolute top-4 right-4 sm:top-6 sm:right-8 text-white text-3xl font-light hover:text-gray-300 transition-colors z-50"
