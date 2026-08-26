@@ -106,7 +106,7 @@ export default async function GrowthDetailPage({ params }: { params: Promise<{ i
             <div className="flex items-center gap-2 pt-2 border-t border-gray-50">
               <input 
                 type="text" 
-                placeholder="댓글 달기.." 
+                placeholder="댓글 달기..." 
                 className="flex-1 text-sm outline-none placeholder:text-gray-400 bg-transparent py-1" 
               />
               <button className="text-amber-500 font-bold text-sm hover:text-amber-600">게시</button>
