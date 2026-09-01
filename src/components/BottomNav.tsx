@@ -13,7 +13,7 @@ export default function BottomNav() {
 
   const navItems = [
     { label: '홈', href: '/', icon: '/home.png' },
-    { label: '성장기록', href: '/sns', icon: '/camera.png' },
+    { label: '성장기록', href: '/growth', icon: '/camera.png' },
     { label: '사운드', href: '/soundbox', icon: '/sound.png' },
     { label: '동화책', href: '/storybook', icon: '/book.png' },
     { label: '한글', href: '/korean', icon: '/hangul.png' },

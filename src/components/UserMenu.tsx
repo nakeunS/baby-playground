@@ -7,6 +7,11 @@ import { createBrowserClient } from '@supabase/ssr'
 import { supabaseKey, supabaseUrl } from "@/lib/supabase/config";
 import Image from 'next/image'
 
+type ProfileType = {
+  display_name: string | null
+  avatar_url: string | null
+}
+
 export default function UserMenu({ userName = '사용자', avatarUrl = null }: { userName?: string, avatarUrl?: string | null }) {
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -14,6 +19,9 @@ export default function UserMenu({ userName = '사용자', avatarUrl = null }: {
   
   const [displayName, setDisplayName] = useState(userName)
   const [avatar, setAvatar] = useState<string | null>(avatarUrl)
+
+  const [profile, setprofile] = useState<ProfileType | null>(null)
+  const [loading, setLoading] = useState(true)
 
   const supabase = createBrowserClient(
     supabaseUrl!,
@@ -25,6 +33,8 @@ export default function UserMenu({ userName = '사용자', avatarUrl = null }: {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const { data } = await supabase.from('profiles').select('display_name, avatar_url').eq('id', user.id).single()
+        setprofile(data)
+        setLoading(false)
         if (data) {
           if (data.display_name) setDisplayName(data.display_name)
           if (data.avatar_url) setAvatar(data.avatar_url)
@@ -57,7 +67,9 @@ export default function UserMenu({ userName = '사용자', avatarUrl = null }: {
         className="flex items-center gap-2 hover:bg-gray-50 px-3 py-1.5 rounded-full transition-colors"
       >
         <div className="w-7 h-7 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden border border-amber-200">
-          {avatar ? (
+          {loading ? (
+            <div className="w-full h-full bg-gray-200 animate-pulse" />
+          ) : avatar ? (
             <Image 
               src={avatar} 
               alt="프로필" 
@@ -70,9 +82,13 @@ export default function UserMenu({ userName = '사용자', avatarUrl = null }: {
           )}
         </div>
 
-        <span className="text-sm font-medium text-gray-700 hidden sm:block">
-          {displayName}님
-        </span>
+        {loading ? (
+          <div className="w-16 h-4 bg-gray-200 animate-pulse rounded sm:block hidden" />
+        ) : (
+          <span className="text-sm font-medium text-gray-700 hidden sm:block">
+            {displayName}님
+          </span>
+        )}
         <span className="text-xs text-gray-400">▼</span>
       </button>
 
