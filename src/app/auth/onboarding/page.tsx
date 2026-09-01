@@ -4,14 +4,8 @@ import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import InviteGenerator from './InviteGenerator'
 
-export default async function OnboardingPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>
-}) {
+export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams
-  
-  // 1. 현재 로그인한 유저 정보 가져오기
   const supabase = await createSupabaseServerClient()
   if (!supabase) {
       redirect(`/auth/login?error=${encodeURIComponent('서버 연결 오류가 발생했습니다.')}`)
@@ -56,7 +50,6 @@ export default async function OnboardingPage({
                 👑 방장 메뉴
               </h2>
               
-              {/* 가족 이름 변경 폼 (나중에 서버 액션 연결 필요) */}
               <form action={updateFamilyName} className="flex gap-2 mb-4">
                 <input 
                   name="newFamilyName" 

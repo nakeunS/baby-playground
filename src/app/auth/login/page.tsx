@@ -14,8 +14,7 @@ const errorMessages = {
   missing: "이메일과 비밀번호를 모두 입력해 주세요.",
   config: "Supabase 환경변수가 설정되지 않았습니다.",
   invalid: "이메일 또는 비밀번호가 올바르지 않습니다.",
-  confirm_email:
-    "이메일 인증 후 다시 로그인해 주세요. 로그인하면 초대 코드가 사용 처리됩니다.",
+  confirm_email: "이메일 인증 후 다시 로그인해 주세요. 로그인하면 초대 코드가 사용 처리됩니다.",
 };
 
 export default async function LoginPage({searchParams}: LoginPageProps) {
