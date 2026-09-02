@@ -188,7 +188,7 @@ export default function GrowthWritePage() {
               disabled={isUploading}
               className="text-amber-500 font-bold text-sm hover:text-amber-600 disabled:opacity-50"
             >
-              {isUploading ? '공유 중...' : (step === 4 ? '공유하기' : '다음')}
+              {isUploading ? '게시 중...' : (step === 4 ? '게시하기' : '다음')}
             </button>
           )}
         </div>
@@ -199,12 +199,11 @@ export default function GrowthWritePage() {
             <div className="flex flex-col items-center justify-center w-full h-full gap-4">
               <h2 className="text-xl font-light text-gray-800">사진과 동영상을 여기에 끌어다 놓으세요</h2>
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileSelect} />
-              <button onClick={() => fileInputRef.current?.click()} className="mt-4 bg-amber-500 text-white font-bold py-2 px-6 rounded-lg">컴퓨터에서 선택</button>
+              <button onClick={() => fileInputRef.current?.click()} className="mt-4 bg-amber-500 text-white font-bold py-2 px-6 rounded-lg">갤러리에서 선택</button>
             </div>
           )}
 
           {step === 2 && mediaList.length > 0 && (
-             // ... 기존과 완벽히 동일 (생략 방지를 위해 아래에 그대로 유지)
             <div className="w-full h-full relative bg-black flex items-center justify-center">
               <Cropper image={mediaList[currentIndex]} crop={crop} zoom={zoom} aspect={aspect} onCropChange={setCrop} onCropComplete={onCropComplete} onZoomChange={setZoom} />
               <div className="absolute bottom-4 left-4 z-50">

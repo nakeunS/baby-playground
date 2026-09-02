@@ -83,9 +83,9 @@ export default function UserMenu({ userName = '사용자', avatarUrl = null }: {
         </div>
 
         {loading ? (
-          <div className="w-16 h-4 bg-gray-200 animate-pulse rounded sm:block hidden" />
+          <div className="w-16 h-4 bg-gray-200 animate-pulse rounded" />
         ) : (
-          <span className="text-sm font-medium text-gray-700 hidden sm:block">
+          <span className="text-sm font-medium text-gray-700">
             {displayName}님
           </span>
         )}

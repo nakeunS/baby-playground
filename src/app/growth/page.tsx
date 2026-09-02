@@ -50,10 +50,10 @@ export default async function GrowthGridPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#FFF9F2] sm:p-4">
-      <div className="max-w-md mx-auto bg-white sm:rounded-xl sm:border border-gray-100 min-h-screen sm:min-h-0 sm:pb-4">
+    <main className="min-h-screen bg-[#FFF9F2] pb-24">
+      <div className="max-w-md mx-auto bg-white rounded-xl border border-gray-100 min-h-[80vh] pb-4">
         
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 sticky top-0 sm:top-14 bg-[#FFF9F2] z-40">
+        <div className="flex items-center justify-between p-4 border-b border-gray-100 sticky top-14 bg-[#FFF9F2] z-40">
           <h1 className="font-extrabold text-gray-800 text-lg">성장기록</h1>
           <Link href="/growth/new" className="text-sm font-bold text-amber-500 bg-amber-50 px-3 py-1.5 rounded-full transition-colors hover:bg-amber-100">
             ➕ 기록하기
