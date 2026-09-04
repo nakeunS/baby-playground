@@ -100,7 +100,7 @@ export async function createFamily(formData: FormData) {
     redirect(`/auth/onboarding?error=${encodeURIComponent(familyError?.message ?? '가족 생성 실패')}`)
   }
 
-  const { error: profileError } = await supabase.from('profiles').insert({
+  const { error: profileError } = await supabase.from('profiles').upsert({
     id: user!.id,
     family_id: family!.id,
     display_name: displayName,
@@ -164,7 +164,7 @@ export async function joinFamily(formData: FormData) {
     redirect(`/auth/onboarding?error=${encodeURIComponent('시간이 초과되어 만료된 코드입니다.')}`)
   }
 
-  const { error: profileError } = await supabase.from('profiles').insert({
+  const { error: profileError } = await supabase.from('profiles').upsert({
     id: user!.id,
     family_id: inviteData.family_id,
     display_name: displayName,
@@ -211,7 +211,14 @@ export async function kickMember(formData: FormData) {
   const { data: profile } = await supabase.from('profiles').select('family_id, role').eq('id', user.id).single()
   if (profile?.role !== 'owner') throw new Error('방장만 멤버를 내보낼 수 있습니다.')
 
-  await supabase.from('profiles').update({ family_id: null, role: 'member' }).eq('id', memberId)
+  const { error } = await supabase
+  .from('profiles')
+  .update({ family_id: null, role: 'member' })
+  .eq('id', memberId)
+
+  if (error) {
+    throw new Error(`멤버 내보내기 실패: ${error.message}`)
+  }
 
   revalidatePath('/auth/onboarding')
 }

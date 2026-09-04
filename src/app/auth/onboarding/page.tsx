@@ -3,6 +3,7 @@ import { createFamily, joinFamily, updateFamilyName, kickMember } from '@/app/ac
 import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import InviteGenerator from './InviteGenerator'
+import SubmitButton from '@/components/SubmitButton'
 
 export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams
@@ -145,12 +146,12 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
               required 
               className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 focus:bg-white transition-all text-sm text-gray-800 placeholder:text-gray-400"
             />
-            <button 
-              type="submit"
-              className="w-full py-4 mt-2 bg-amber-400 hover:bg-amber-500 text-white font-bold rounded-md shadow-sm transition-colors text-base"
-            >
-              새로운 가족 만들기
-            </button>
+            <SubmitButton 
+              text="새로운 가족 만들기" 
+              loadingText="가족 만드는 중..." 
+              bgColor="bg-amber-400" 
+              hoverColor="hover:bg-amber-500" 
+            />
           </form>
         </section>
 
