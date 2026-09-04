@@ -16,6 +16,10 @@ interface EditPageClientProps {
   }
 }
 
+const isVideoFile = (urlOrName: string) => {
+  return /\.(mp4|mov|webm)(\?.*)?$/i.test(urlOrName)
+}
+
 export default function EditPostClient({ post }: EditPageClientProps) {
   const router = useRouter()
   const [content, setContent] = useState(post.content || '')
@@ -47,25 +51,22 @@ export default function EditPostClient({ post }: EditPageClientProps) {
     setNewPreviews(newPreviews.filter((_, idx) => idx !== indexToRemove))
   }
 
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
-
-  const handleDragStart = (index: number) => {
-    setDraggedIndex(index)
-  }
-
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault()
-  }
-
-  const handleDrop = (targetIndex: number) => {
-    if (draggedIndex === null || draggedIndex === targetIndex) return
-
+  const handleMoveLeft = (index: number) => {
+    if (index === 0) return
     const updated = [...mediaList]
-    const [movedItem] = updated.splice(draggedIndex, 1) // 기존 위치에서 빼고
-    updated.splice(targetIndex, 0, movedItem) // 타겟 위치에 끼워넣기
-
+    const temp = updated[index]
+    updated[index] = updated[index - 1]
+    updated[index - 1] = temp
     setMediaList(updated)
-    setDraggedIndex(null)
+  }
+
+  const handleMoveRight = (index: number) => {
+    if (index === mediaList.length - 1) return
+    const updated = [...mediaList]
+    const temp = updated[index]
+    updated[index] = updated[index + 1]
+    updated[index + 1] = temp
+    setMediaList(updated)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -75,18 +76,19 @@ export default function EditPostClient({ post }: EditPageClientProps) {
         const uploadedUrls: string[] = []
 
         for (const file of newFiles) {
-          const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${file.name.split('.').pop()}`
+          const fileExt = file.name.split('.').pop()
+          const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
           const { error: uploadError } = await supabase.storage
-            .from('posts')
+            .from('family_posts')
             .upload(fileName, file)
 
           if (uploadError) {
-            alert('이미지 업로드 실패: ' + uploadError.message)
+            alert('파일 업로드 실패: ' + uploadError.message)
             return
           }
 
           const { data: { publicUrl } } = supabase.storage
-            .from('posts')
+            .from('family_posts')
             .getPublicUrl(fileName)
 
           uploadedUrls.push(publicUrl)
@@ -121,55 +123,97 @@ export default function EditPostClient({ post }: EditPageClientProps) {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">사진 관리 및 순서</label>
+            <label className="block text-sm font-bold text-gray-700 mb-2">미디어 관리 및 순서 (사진/동영상)</label>
             <div className="grid grid-cols-3 gap-3 mb-3">
-              {mediaList.map((url, index) => (
-                <div 
+              {mediaList.map((url, index) => {
+                const isVideo = isVideoFile(url)
+                return (
+                  <div 
                     key={url}
-                    draggable
-                    onDragStart={() => handleDragStart(index)}
-                    onDragOver={(e) => handleDragOver(e, index)}
-                    onDrop={() => handleDrop(index)}
-                    className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 group bg-gray-50 cursor-grab active:cursor-grabbing transition-transform">
-                  <Image src={url} alt="기존 사진" fill className="object-cover pointer-events-none" />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 group bg-gray-50 flex items-center justify-center shadow-sm">
+                    
+                    {isVideo ? (
+                      <video src={`${url}#t=0.001`} className="w-full h-full object-cover" preload="metadata" muted playsInline />
+                    ) : (
+                      <Image src={url} alt="기존 미디어" fill className="object-cover" unoptimized />
+                    )}
+
+                    {isVideo && (
+                      <div className="absolute top-2 right-2 text-white drop-shadow-md z-10">
+                        <span className="text-xs">▶️</span>
+                      </div>
+                    )}
+
+                    <div className="absolute inset-x-2 top-1/2 -translate-y-1/2 flex justify-between items-center z-20 pointer-events-none">
+                      <button
+                        type="button"
+                        disabled={index === 0}
+                        onClick={() => handleMoveLeft(index)}
+                        className="bg-black/60 hover:bg-black text-white w-7 h-7 rounded-full text-xs font-bold disabled:opacity-0 flex items-center justify-center shadow-md pointer-events-auto transition-all backdrop-blur-xs"
+                        title="앞으로"
+                      >
+                        ‹
+                      </button>
+                      <button
+                        type="button"
+                        disabled={index === mediaList.length - 1}
+                        onClick={() => handleMoveRight(index)}
+                        className="bg-black/60 hover:bg-black text-white w-7 h-7 rounded-full text-xs font-bold disabled:opacity-0 flex items-center justify-center shadow-md pointer-events-auto transition-all backdrop-blur-xs"
+                        title="뒤로"
+                      >
+                        ›
+                      </button>
+                    </div>
+
                     <button 
                       type="button" 
                       onClick={() => handleRemoveExistingMedia(index)}
-                      className="bg-red-500 text-white p-1.5 rounded-full text-xs font-bold hover:bg-red-600"
+                      className="absolute top-2 left-2 bg-red-500 text-white w-6 h-6 rounded-full text-xs font-bold hover:bg-red-600 shadow flex items-center justify-center z-20"
                       title="삭제"
                     >
                       ✕
                     </button>
                   </div>
-                  <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded">
-                    기존 {index + 1}
-                  </span>
-                </div>
-              ))}
+                )
+              })}
 
-              {newPreviews.map((previewUrl, index) => (
-                <div key={previewUrl} className="relative aspect-square rounded-xl overflow-hidden border border-amber-300 group bg-amber-50">
-                  <Image src={previewUrl} alt="새 사진" className="object-cover w-full h-full" />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              {newPreviews.map((previewUrl, index) => {
+                const file = newFiles[index]
+                const isVideo = file ? file.type.startsWith('video/') : false
+
+                return (
+                  <div key={previewUrl} className="relative aspect-square rounded-xl overflow-hidden border border-amber-300 group bg-amber-50 flex items-center justify-center shadow-sm">
+                    {isVideo ? (
+                      <video src={previewUrl} className="w-full h-full object-cover" muted playsInline />
+                    ) : (
+                      <Image src={previewUrl} alt="신규 미디어" fill className="object-cover" unoptimized />
+                    )}
+
+                    {isVideo && (
+                      <div className="absolute top-2 right-2 text-white drop-shadow-md z-10">
+                        <span className="text-xs">▶️</span>
+                      </div>
+                    )}
+
+                    <span className="absolute bottom-2 bg-amber-500/90 backdrop-blur-xs text-white text-[10px] px-2 py-0.5 rounded-full z-10 font-bold">
+                      신규 {index + 1}
+                    </span>
+
                     <button 
                       type="button" 
                       onClick={() => handleRemoveNewMedia(index)}
-                      className="bg-red-500 text-white p-1.5 rounded-full text-xs font-bold hover:bg-red-600"
+                      className="absolute top-2 left-2 bg-red-500 text-white w-6 h-6 rounded-full text-xs font-bold hover:bg-red-600 shadow flex items-center justify-center z-20"
                     >
                       ✕
                     </button>
                   </div>
-                  <span className="absolute bottom-1 left-1 bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded">
-                    신규 {index + 1}
-                  </span>
-                </div>
-              ))}
+                )
+              })}
             </div>
 
             <label className="inline-flex items-center justify-center px-4 py-2 border border-dashed border-gray-300 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 cursor-pointer w-full transition-colors">
-              ➕ 사진 추가하기
-              <input type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
+              + 사진 및 동영상 추가하기
+              <input type="file" accept="image/*,video/*" multiple onChange={handleFileChange} className="hidden" />
             </label>
           </div>
 

@@ -22,13 +22,18 @@ export default async function GrowthGridPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   let posts: PostType[] = []
+  let isOwner = false
 
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('family_id')
+      .select('family_id, role')
       .eq('id', user.id)
       .single()
+
+    if( profile?.role === 'owner' ){
+      isOwner = true
+    }
 
     if (profile?.family_id) {
       const { data } = await supabase
@@ -55,9 +60,11 @@ export default async function GrowthGridPage() {
         
         <div className="flex items-center justify-between p-4 border-b border-gray-100 sticky top-14 bg-[#FFF9F2] z-40">
           <h1 className="font-extrabold text-gray-800 text-lg">성장기록</h1>
-          <Link href="/growth/new" className="text-sm font-bold text-amber-500 bg-amber-50 px-3 py-1.5 rounded-full transition-colors hover:bg-amber-100">
-            ➕ 기록하기
-          </Link>
+          {isOwner && (
+            <Link href="/growth/new" className="text-sm font-bold text-amber-500 bg-amber-50 py-1.5 rounded-full transition-colors hover:bg-amber-100">
+              + 기록하기
+            </Link>
+          )}
         </div>
 
         {posts.length === 0 ? (
@@ -69,16 +76,20 @@ export default async function GrowthGridPage() {
         ) : (
           <div className="grid grid-cols-3 pt-15 pd-15 gap-1 mt-1">
             {posts.map((post) => {
-              const isVideo = post.image_url?.toLowerCase().match(/\.(mp4|mov|webm)$/i)
-              const firstImageUrl = post.image_url ? post.image_url.split(',')[0] : ''
+              const firstMediaUrl = post.image_url ? post.image_url.split(',')[0] : ''
+              const isVideo = firstMediaUrl.toLowerCase().match(/\.(mp4|mov|webm)$/i)
 
+              const videoSourceUrl = isVideo ? `${firstMediaUrl}#t=0.001` : firstMediaUrl
               return (
                 <Link key={post.id} href={`/growth/${post.id}`} className="relative aspect-square bg-gray-100 group">
                   {isVideo ? (
-                    <video src={post.image_url} className="w-full h-full object-cover" muted playsInline />
+                    <video 
+                      src={videoSourceUrl} 
+                      className="w-full h-full object-cover" muted playsInline
+                      preload="metadata" />
                   ) : (
                     <Image 
-                      src={firstImageUrl}
+                      src={firstMediaUrl}
                       alt="썸네일"
                       width={150} height={150}
                       unoptimized={true} 

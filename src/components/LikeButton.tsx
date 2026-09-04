@@ -2,8 +2,24 @@
 
 import { useState, useTransition } from 'react'
 import { toggleLike } from '@/app/actions/post'
+import LikesModal from './LikesModal'
 
-export default function LikeButton({ postId, initialHasLiked, totalLikes }: { postId: string, initialHasLiked: boolean, totalLikes: number }) {
+type LikeItemType = {
+  user_id: string
+  profiles: {
+    display_name: string | null
+    avatar_url: string | null
+  } | null
+}
+
+type LikeButtonProps = {
+  postId: string
+  initialHasLiked: boolean
+  totalLikes: number
+  likes: LikeItemType[] // 👈 likes 배열 추가
+}
+
+export default function LikeButton({ postId, initialHasLiked, totalLikes, likes }: LikeButtonProps ) {
   const [hasLiked, setHasLiked] = useState(initialHasLiked)
   const [likesCount, setLikesCount] = useState(totalLikes)
   const [isPending, startTransition] = useTransition()
@@ -32,7 +48,7 @@ export default function LikeButton({ postId, initialHasLiked, totalLikes }: { po
       >
         {hasLiked ? '❤️' : '🤍'}
       </button>
-      <p className="text-sm font-bold text-gray-900">좋아요 {likesCount}개</p>
+      <LikesModal likes={likes} totalLikes={likesCount} />
     </div>
   )
 }

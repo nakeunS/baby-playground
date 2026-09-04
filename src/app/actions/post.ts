@@ -12,7 +12,7 @@ async function getSupabase() {
   return supabase
 }
 
-export async function createPost(imageUrl: string, content: string) {
+async function requireFamilyOwner() {
   const supabase = await getSupabase()
   const { data: { user } } = await supabase.auth.getUser()
   
@@ -22,7 +22,7 @@ export async function createPost(imageUrl: string, content: string) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('family_id, role')
+    .select('family_id, role, id')
     .eq('id', user.id)
     .single()
 
@@ -30,15 +30,21 @@ export async function createPost(imageUrl: string, content: string) {
     throw new Error('소속된 가족이 없습니다.')
   }
 
-  if (profile?.role !== 'owner'){
+  if (profile?.role !== 'owner') {
     throw new Error('게시물 생성 권한이 없습니다.')
   }
+
+  return { supabase, user, profile }
+}
+
+export async function createPost(imageUrl: string, content: string) {
+  const { supabase, profile } = await requireFamilyOwner()
 
   const { error } = await supabase
     .from('posts')
     .insert({
       family_id: profile.family_id,
-      author_id: user.id,
+      author_id: profile.id,
       image_url: imageUrl,
       content: content,
     })
@@ -51,11 +57,7 @@ export async function createPost(imageUrl: string, content: string) {
 }
 
 export async function updatePostWithMedia(postId: string, newContent: string, mediaUrls: string[]) {
-  const supabase = await getSupabase()
-  if (!supabase) throw new Error('서버 연결 오류')
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('로그인이 필요합니다.')
+  const { supabase } = await requireFamilyOwner()
 
   const image_url = mediaUrls.join(',')
 
@@ -71,9 +73,43 @@ export async function updatePostWithMedia(postId: string, newContent: string, me
   return { success: true }
 }
 
+export async function deletePost(postId: string, imageUrls: string | null) {
+  const { supabase } = await requireFamilyOwner()
+
+  if (imageUrls) {
+    try {
+      const urls = imageUrls.split(',')
+      const filePaths = urls.map(url => {
+        const parts = url.split('/family_posts/') 
+        return parts[1]
+      }).filter(Boolean)
+
+      if (filePaths.length > 0) {
+        await supabase.storage.from('family_posts').remove(filePaths)
+      }
+    } catch (err) {
+      console.error("스토리지 파일 삭제 중 에러:", err)
+    }
+  }
+
+  await supabase.from('likes').delete().eq('post_id', postId)
+  await supabase.from('comments').delete().eq('post_id', postId)
+
+  const { error } = await supabase
+    .from('posts')
+    .delete()
+    .eq('id', postId)
+
+  if (error) {
+    throw new Error(`게시물 삭제 실패: ${error.message}`)
+  }
+
+  revalidatePath('/growth')
+  redirect('/growth')
+}
+
 export async function toggleLike(postId: string) {
   const supabase = await getSupabase()
-  if (!supabase) return { error: '서버 연결 오류' }
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: '로그인이 필요합니다.' }
@@ -107,7 +143,6 @@ export async function toggleLike(postId: string) {
 
 export async function addComment(postId: string, content: string, parentId?: string | null) {
   const supabase = await getSupabase()
-  if (!supabase) return { error: '서버 연결 오류' }
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: '로그인이 필요합니다.' }
@@ -131,7 +166,6 @@ export async function addComment(postId: string, content: string, parentId?: str
 
 export async function updateComment(commentId: string, postId: string, newContent: string) {
   const supabase = await getSupabase()
-  if (!supabase) return { error: '서버 연결 오류' }
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: '로그인이 필요합니다.' }
@@ -152,7 +186,6 @@ export async function updateComment(commentId: string, postId: string, newConten
 
 export async function deleteComment(commentId: string, postId: string) {
   const supabase = await getSupabase()
-  if (!supabase) return { error: '서버 연결 오류' }
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: '로그인이 필요합니다.' }

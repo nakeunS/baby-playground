@@ -9,19 +9,6 @@ import { supabaseUrl, supabaseKey } from '@/lib/supabase/config'
 import { createPost } from '@/app/actions/post'
 import { default as NextImage } from 'next/image'
 
-const FILTER_STYLES: Record<string, string> = {
-  '원본': 'none',
-  'Clarendon': 'contrast(1.2) saturate(1.35) brightness(1.1)',
-  'Gingham': 'brightness(1.05) hue-rotate(350deg) contrast(1.1)',
-  'Moon': 'grayscale(1) contrast(1.1) brightness(1.1)',
-  'Lark': 'contrast(1.2) saturate(1.1)',
-  'Reyes': 'sepia(0.22) brightness(1.1) contrast(0.85) saturate(0.75)',
-  'Juno': 'saturate(1.4) contrast(1.1) brightness(1.1) hue-rotate(-10deg)',
-  'Slumber': 'saturate(0.66) brightness(1.05) sepia(0.22)',
-  'Crema': 'sepia(0.5) brightness(1.15) contrast(0.9)'
-}
-const FILTER_NAMES = Object.keys(FILTER_STYLES)
-
 type CropArea = {
   x: number;
   y: number;
@@ -57,10 +44,9 @@ export default function GrowthWritePage() {
   const [step, setStep] = useState(1)
   
   const [mediaList, setMediaList] = useState<string[]>([]) 
+  const [mediaTypes, setMediaTypes] = useState<string[]>([]) 
   const [currentIndex, setCurrentIndex] = useState(0)
   const [croppedImages, setCroppedImages] = useState<string[]>([]) 
-  
-  const [imageFilters, setImageFilters] = useState<string[]>([])
   
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
@@ -78,18 +64,27 @@ export default function GrowthWritePage() {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      setMediaList([URL.createObjectURL(file)])
-      setStep(2)
-    }
+      if( file ){
+        const isVideo = file.type.startsWith('video/')
+        setMediaList([URL.createObjectURL(file)])
+        setMediaTypes([isVideo ? 'video' : 'image'])
+        setCurrentIndex(0)
+        setStep(2)
+      }
   }
 
   const handleAddMoreFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
-    const newUrls = files.map(file => URL.createObjectURL(file))
-    if (newUrls.length > 0) {
+    if (files.length > 0) {
+      const newUrls = files.map(file => URL.createObjectURL(file))
+      const newTypes = files.map(file => file.type.startsWith('video/') ? 'video' : 'image')
+      
       setMediaList(prev => [...prev, ...newUrls])
-      setCurrentIndex(mediaList.length)
+      setMediaTypes(prev => [...prev, ...newTypes])
+      
+      if (step >= 3) {
+        setCroppedImages(prev => [...prev, ...newUrls])
+      }
     }
   }
 
@@ -98,13 +93,13 @@ export default function GrowthWritePage() {
   }, [])
 
   const getHeaderTitle = () => {
-    if (step === 1 || step === 4) return '새 게시물 만들기'
+    if (step === 1 || step === 3) return '새 게시물 만들기'
     if (step === 2) return '자르기'
-    if (step === 3) return '편집'
   }
 
   const handleBack = () => {
     if (step === 1) router.push('/growth')
+    else if (step === 3 && mediaTypes[currentIndex] === 'video') setStep(1) 
     else setStep(step - 1)
   }
 
@@ -115,13 +110,18 @@ export default function GrowthWritePage() {
       const uploadedUrls: string[] = []
 
       for (let i = 0; i < croppedImages.length; i++) {
-        const response = await fetch(croppedImages[i])
+        const isVideo = mediaTypes[i] === 'video'
+        const targetSource = croppedImages[i]
+
+        const response = await fetch(targetSource)
         const blob = await response.blob()
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.jpg`
+        const ext = isVideo ? 'mp4' : 'jpg'
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${ext}`
+        const contentType = isVideo ? (blob.type || 'video/mp4') : 'image/jpeg'
 
         const { error: uploadError } = await supabase.storage
           .from('family_posts')
-          .upload(fileName, blob, { contentType: 'image/jpeg' })
+          .upload(fileName, blob, { contentType })
 
         if (uploadError) throw uploadError
         const { data: { publicUrl } } = supabase.storage
@@ -132,7 +132,6 @@ export default function GrowthWritePage() {
       }
 
       const finalImageUrl = uploadedUrls.join(',')
-
       await createPost(finalImageUrl, content)
 
       alert('게시물이 성공적으로 업로드되었습니다! 🎉')
@@ -152,32 +151,23 @@ export default function GrowthWritePage() {
   const handleNext = async () => {
     if (step === 2 && mediaList.length > 0) {
       const newCropped = [...mediaList]
-      if (croppedAreaPixels) {
+      if (mediaTypes[currentIndex] === 'image' && croppedAreaPixels) {
         const cropped = await getCroppedImg(mediaList[currentIndex], croppedAreaPixels)
         if (cropped) newCropped[currentIndex] = cropped
       }
       setCroppedImages(newCropped)
-      setImageFilters(new Array(newCropped.length).fill('원본'))
       setCurrentIndex(0)
       setStep(3)
     } else if (step === 3) {
-      setStep(4)
-    } else if (step === 4) {
       await handleShare()
     }
-  }
-
-  const applyFilterToCurrent = (filterName: string) => {
-    const newFilters = [...imageFilters]
-    newFilters[currentIndex] = filterName
-    setImageFilters(newFilters)
   }
 
   return (
     <main className="fixed inset-0 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
       <Link href="/growth" className="absolute top-4 right-4 sm:top-6 sm:right-8 text-white text-3xl font-light hover:text-gray-300 transition-colors z-50">✕</Link>
 
-      <div className={`bg-white rounded-xl overflow-hidden flex flex-col shadow-2xl transition-all duration-300 ${step >= 3 ? 'w-full max-w-5xl h-[80vh]' : 'w-full max-w-2xl h-[70vh]'}`}>
+      <div className={`bg-white rounded-xl overflow-hidden flex flex-col shadow-2xl transition-all duration-300 ${step === 3 ? 'w-full max-w-5xl h-[80vh]' : 'w-full max-w-2xl h-[70vh]'}`}>
         
         <div className="flex items-center justify-between px-4 h-12 border-b border-gray-200 bg-white z-10 shrink-0">
           <button onClick={handleBack} disabled={isUploading} className="text-xl text-gray-800 hover:text-gray-500 p-1 disabled:opacity-30">←</button>
@@ -188,7 +178,7 @@ export default function GrowthWritePage() {
               disabled={isUploading}
               className="text-amber-500 font-bold text-sm hover:text-amber-600 disabled:opacity-50"
             >
-              {isUploading ? '게시 중...' : (step === 4 ? '게시하기' : '다음')}
+              {isUploading ? '게시 중...' : (step === 3 ? '게시하기' : '다음')}
             </button>
           )}
         </div>
@@ -205,44 +195,62 @@ export default function GrowthWritePage() {
 
           {step === 2 && mediaList.length > 0 && (
             <div className="w-full h-full relative bg-black flex items-center justify-center">
-              <Cropper image={mediaList[currentIndex]} crop={crop} zoom={zoom} aspect={aspect} onCropChange={setCrop} onCropComplete={onCropComplete} onZoomChange={setZoom} />
+              {mediaTypes[currentIndex] === 'video' ? (
+                <video src={mediaList[currentIndex]} className="max-w-full max-h-full object-contain" controls />
+              ) : (
+                <Cropper image={mediaList[currentIndex]} crop={crop} zoom={zoom} aspect={aspect} onCropChange={setCrop} onCropComplete={onCropComplete} onZoomChange={setZoom} />
+              )}
+              
               <div className="absolute bottom-4 left-4 z-50">
-                {showRatioMenu && (
+                {showRatioMenu && mediaTypes[currentIndex] === 'image' && (
                   <div className="mb-2 bg-black/80 rounded-lg p-2 flex flex-col gap-1 text-white text-sm shadow-lg">
                     <button onClick={() => setAspect(1)} className={`p-2 hover:bg-white/20 rounded ${aspect === 1 ? 'text-amber-400' : ''}`}>1:1</button>
                     <button onClick={() => setAspect(4/5)} className={`p-2 hover:bg-white/20 rounded ${aspect === 4/5 ? 'text-amber-400' : ''}`}>4:5</button>
                     <button onClick={() => setAspect(16/9)} className={`p-2 hover:bg-white/20 rounded ${aspect === 16/9 ? 'text-amber-400' : ''}`}>16:9</button>
                   </div>
                 )}
-                <button onClick={() => { setShowRatioMenu(!showRatioMenu); setShowMultiMenu(false); }} className="w-10 h-10 rounded-full bg-black/60 text-white flex items-center justify-center">⧉</button>
+                {mediaTypes[currentIndex] === 'image' && (
+                  <button onClick={() => { setShowRatioMenu(!showRatioMenu); setShowMultiMenu(false); }} className="w-10 h-10 rounded-full bg-black/60 text-white flex items-center justify-center shadow-md">⧉</button>
+                )}
               </div>
-              <div className="absolute bottom-4 right-4 z-50">
+
+              <div className="absolute bottom-4 right-4 z-50 flex flex-col items-end">
                 {showMultiMenu && (
-                  <div className="mb-2 bg-black/80 rounded-lg p-3 flex gap-3 overflow-x-auto shadow-lg">
+                  <div className="mb-2 bg-black/80 rounded-lg p-3 flex gap-3 overflow-x-auto shadow-lg max-w-xs">
                     {mediaList.map((url, idx) => (
-                      <div key={idx} onClick={() => setCurrentIndex(idx)} className={`relative w-12 h-12 shrink-0 cursor-pointer border-2 ${currentIndex === idx ? 'border-amber-500' : 'border-transparent'}`}>
-                        <NextImage src={url} alt="이미지" className="w-full h-full object-cover rounded-sm" />
+                      <div key={idx} onClick={() => setCurrentIndex(idx)} className={`relative w-12 h-12 shrink-0 cursor-pointer border-2 rounded-sm overflow-hidden ${currentIndex === idx ? 'border-amber-500' : 'border-transparent'}`}>
+                        {mediaTypes[idx] === 'video' ? (
+                          <video src={url} className="w-full h-full object-cover" />
+                        ) : (
+                          <NextImage src={url} alt="이미지" width={48} height={48} className="w-full h-full object-cover" unoptimized />
+                        )}
                       </div>
                     ))}
-                    <div onClick={() => multiFileInputRef.current?.click()} className="w-12 h-12 shrink-0 border border-dashed border-gray-400 flex items-center justify-center text-gray-400 cursor-pointer">+</div>
+                    <div onClick={() => multiFileInputRef.current?.click()} className="w-12 h-12 shrink-0 border border-dashed border-gray-400 rounded-sm flex items-center justify-center text-gray-400 cursor-pointer hover:bg-white/10">+</div>
                   </div>
                 )}
                 <input type="file" multiple ref={multiFileInputRef} className="hidden" accept="image/*,video/*" onChange={handleAddMoreFiles} />
-                <button onClick={() => { setShowMultiMenu(!showMultiMenu); setShowRatioMenu(false); }} className="w-10 h-10 rounded-full bg-black/60 text-white flex items-center justify-center">❐</button>
+                <button onClick={() => { setShowMultiMenu(!showMultiMenu); setShowRatioMenu(false); }} className="w-10 h-10 rounded-full bg-black/60 text-white flex items-center justify-center shadow-md">❐</button>
               </div>
             </div>
           )}
 
-          {step >= 3 && croppedImages.length > 0 && (
+          {step === 3 && croppedImages.length > 0 && (
             <div className="w-full h-full flex flex-col md:flex-row">
               
               <div className="relative w-full md:w-[60%] h-1/2 md:h-full bg-gray-100 flex items-center justify-center border-b md:border-b-0 md:border-r border-gray-200 group overflow-hidden">
-                <NextImage 
-                  src={croppedImages[currentIndex]} 
-                  alt="편집 중인 이미지" 
-                  className="max-w-full max-h-full object-contain shadow-sm transition-all duration-300" 
-                  style={{ filter: FILTER_STYLES[imageFilters[currentIndex]] }}
-                />
+                {mediaTypes[currentIndex] === 'video' ? (
+                  <video src={croppedImages[currentIndex]} className="max-w-full max-h-full object-contain" controls autoPlay muted playsInline />
+                ) : (
+                  <NextImage 
+                    src={croppedImages[currentIndex]} 
+                    alt="게시할 이미지" 
+                    width={600} 
+                    height={600}
+                    unoptimized
+                    className="max-w-full max-h-full object-contain shadow-sm" 
+                  />
+                )}
                 
                 {currentIndex > 0 && (
                   <button onClick={() => setCurrentIndex(prev => prev - 1)} className="absolute left-4 w-8 h-8 flex items-center justify-center bg-black/50 text-white rounded-full opacity-80 hover:opacity-100 transition-opacity z-10">‹</button>
@@ -259,54 +267,23 @@ export default function GrowthWritePage() {
                 )}
               </div>
 
-              <div className="w-full md:w-[40%] h-1/2 md:h-full bg-white flex flex-col overflow-y-auto scrollbar-hide">
-                
-                {step === 3 && (
-                  <div className="p-4 grid grid-cols-3 gap-3">
-                    {FILTER_NAMES.map((filter) => {
-                      const isSelected = imageFilters[currentIndex] === filter;
-                      
-                      return (
-                        <div 
-                          key={filter} 
-                          onClick={() => applyFilterToCurrent(filter)}
-                          className="flex flex-col items-center gap-2 cursor-pointer group"
-                        >
-                          <div className={`aspect-square w-full rounded-md overflow-hidden ${isSelected ? 'border-[3px] border-amber-500' : 'border border-gray-200 group-hover:opacity-80'}`}>
-                            <NextImage 
-                              src={croppedImages[currentIndex]} 
-                              alt={filter} 
-                              className="w-full h-full object-cover"
-                              style={{ filter: FILTER_STYLES[filter] }}
-                            />
-                          </div>
-                          <span className={`text-xs ${isSelected ? 'font-bold text-amber-500' : 'text-gray-500 font-medium'}`}>
-                            {filter}
-                          </span>
-                        </div>
-                      )
-                    })}
+              <div className="w-full md:w-[40%] h-1/2 md:h-full bg-white flex flex-col">
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center gap-3 p-4">
+                    <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center text-lg shadow-inner">😀</div>
+                    <span className="font-bold text-sm text-gray-900">내 가족 피드에 쓰기</span>
                   </div>
-                )}
-
-                {step === 4 && (
-                  <div className="flex flex-col h-full">
-                    <div className="flex items-center gap-3 p-4">
-                      <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center text-lg shadow-inner">😀</div>
-                      <span className="font-bold text-sm text-gray-900">내 가족 피드에 쓰기</span>
-                    </div>
-                    <div className="px-4 pb-4 border-b border-gray-100 flex-1">
-                      <textarea 
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                        placeholder="문구 입력..." 
-                        className="w-full h-32 resize-none outline-none text-sm text-black placeholder:text-gray-400 bg-transparent"
-                        autoFocus
-                        disabled={isUploading}
-                      />
-                    </div>
+                  <div className="px-4 pb-4 border-b border-gray-100 flex-1">
+                    <textarea 
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      placeholder="문구 입력..." 
+                      className="w-full h-32 resize-none outline-none text-sm text-black placeholder:text-gray-400 bg-transparent"
+                      autoFocus
+                      disabled={isUploading}
+                    />
                   </div>
-                )}
+                </div>
               </div>
             </div>
           )}
