@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { getPost } from '@/app/actions/post'
 import { notFound, redirect } from 'next/navigation'
 import MediaCarousel from '@/components/MediaCarousel'
 import Link from 'next/link'
@@ -42,40 +43,14 @@ type PostDetailType = {
 
 export default async function GrowthDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+
   const supabase = await createSupabaseServerClient()
-  if (!supabase) {
-      redirect(`/auth/login?error=${encodeURIComponent('서버 연결 오류가 발생했습니다.')}`)
-  }
+  if (!supabase) redirect('/auth/login')
 
   const { data: { user } } = await supabase.auth.getUser()
+  const data = await getPost(id)
 
-  const { data, error } = await supabase
-    .from('posts')
-    .select(`
-      id,
-      image_url,
-      content,
-      created_at,
-      author_id,
-      profiles ( display_name, avatar_url ),
-      likes ( 
-        user_id,
-        profiles:user_id ( display_name, avatar_url )  
-      ),
-      comments (
-        id,
-        content,
-        created_at,
-        parent_id,
-        user_id,
-        profiles:user_id ( display_name, avatar_url )
-      )
-    `)
-    .eq('id', id)
-    .single()
-
-  if (error || !data) {
-    console.log("상세 페이지 조회 에러:", error)
+  if( !data ){
     notFound()
   }
 

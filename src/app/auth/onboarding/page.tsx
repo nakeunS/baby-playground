@@ -1,5 +1,4 @@
-import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { createFamily, joinFamily, updateFamilyName, kickMember } from '@/app/actions/auth'
+import { createFamily, joinFamily, updateFamilyName, kickMember, getOnboardingData } from '@/app/actions/auth'
 import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import InviteGenerator from './InviteGenerator'
@@ -7,33 +6,13 @@ import SubmitButton from '@/components/SubmitButton'
 
 export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams
-  const supabase = await createSupabaseServerClient()
-  if (!supabase) {
-      redirect(`/auth/login?error=${encodeURIComponent('서버 연결 오류가 발생했습니다.')}`)
+  const { user, hasFamily, isOwner, familyName, members } = await getOnboardingData()
+
+  if (!user) {
+    redirect(`/auth/login?error=${encodeURIComponent('로그인이 필요합니다.')}`)
   }
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) return null
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select(`
-      *,
-      families ( name )
-    `)
-    .eq('id', user.id)
-    .single()
-
-  const hasFamily = !!profile?.family_id
-  const isOwner = profile?.role === 'owner'
-  const familyName = profile?.families?.name || '우리 가족'
 
   if (hasFamily) {
-    const { data: members } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('family_id', profile.family_id)
-
     return (
       <main className="min-h-screen flex items-center justify-center pt-15 pb-15 bg-[#FFF9F2] p-4">
         <div className="w-full max-w-md flex flex-col gap-6">

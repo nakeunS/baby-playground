@@ -1,6 +1,7 @@
 'use server'
 
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/client'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
@@ -51,6 +52,43 @@ export async function verifyOtp(formData: FormData) {
   }
 
   redirect('/auth/onboarding')
+}
+
+export async function getOnboardingData() {
+  const supabase = await getSupabase()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) return { user: null, hasFamily: false, isOwner: false, familyName: '우리 가족', members: null }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select(`
+      *,
+      families ( name )
+    `)
+    .eq('id', user.id)
+    .single()
+
+  const hasFamily = !!profile?.family_id
+  const isOwner = profile?.role === 'owner'
+  const familyName = profile?.families?.name || '우리 가족'
+
+  let members = null
+  if (hasFamily && profile?.family_id) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('family_id', profile.family_id)
+    members = data
+  }
+
+  return {
+    user,
+    hasFamily,
+    isOwner,
+    familyName,
+    members,
+  }
 }
 
 export async function signIn(formData: FormData) {
