@@ -68,3 +68,25 @@ export async function uploadAndSaveSound(familyId: string, title: string, emoji:
 
   return true
 }
+
+export async function deleteSound(soundId: string, audioUrl: string) {
+  const supabase = createClient()
+
+  const urlParts = audioUrl.split('/sound-basket/')
+  if (urlParts.length > 1) {
+    const filePath = urlParts[1]
+    
+    await supabase.storage
+      .from('sound-basket')
+      .remove([filePath])
+  }
+
+  const { error } = await supabase
+    .from('sounds')
+    .delete()
+    .eq('id', soundId)
+
+  if (error) throw error
+
+  return true
+}

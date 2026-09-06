@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import SoundRecorder from '@/components/SoundRecorder'
-import { getSoundBoxData, SoundItem } from '@/app/actions/sound'
+import { getSoundBoxData, deleteSound, SoundItem } from '@/app/actions/sound'
 
 export default function SoundBoxPage() {
   const [sounds, setSounds] = useState<SoundItem[]>([])
   const [familyId, setFamilyId] = useState<string | null>(null)
   const [playingId, setPlayingId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; audioUrl: string } | null>(null)
 
   useEffect(() => {
     let isMounted = true
@@ -37,7 +39,7 @@ export default function SoundBoxPage() {
   }, [])
 
   const playSound = (id: string, soundPath: string) => {
-    if( playingId ) return
+    if (playingId) return
     const audio = new Audio(soundPath)
     setPlayingId(id)
 
@@ -51,6 +53,25 @@ export default function SoundBoxPage() {
     }
   }
 
+  const openDeleteConfirm = (e: React.MouseEvent, id: string, audioUrl: string) => {
+    e.stopPropagation()
+    setDeleteTarget({ id, audioUrl })
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return
+
+    try {
+      await deleteSound(deleteTarget.id, deleteTarget.audioUrl)
+      setSounds((prev) => prev.filter((item) => item.id !== deleteTarget.id))
+    } catch (err) {
+      console.error('사운드 삭제 실패:', err)
+      alert('삭제 중 오류가 발생했습니다.')
+    } finally {
+      setDeleteTarget(null)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FFF9F2] flex items-center justify-center">
@@ -60,7 +81,7 @@ export default function SoundBoxPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#FFF9F2] pb-32 pt-20 px-4 flex flex-col items-center">
+    <main className="min-h-screen bg-[#FFF9F2] pb-32 pt-20 px-4 flex flex-col items-center relative">
       <div className="w-full max-w-md">
         
         <div className="text-center mb-6">
@@ -95,18 +116,26 @@ export default function SoundBoxPage() {
               const colorClass = bgColors[index % bgColors.length]
 
               return (
-                <button
-                  key={item.id}
-                  onClick={() => playSound(item.id, item.audio_url)}
-                  className={`relative aspect-square rounded-3xl border-2 flex flex-col items-center justify-center gap-3 shadow-sm transition-all duration-200 cursor-pointer overflow-hidden bg-white ${colorClass} ${
-                    isPlaying 
-                      ? 'scale-95 ring-4 ring-offset-2 ring-amber-400 animate-pulse' 
-                      : 'active:scale-95 hover:shadow-md'
-                  }`}
-                >
+                <div
+                    key={item.id}
+                    onClick={() => playSound(item.id, item.audio_url)}
+                    className={`relative aspect-square rounded-3xl border-2 flex flex-col items-center justify-center gap-3 shadow-sm transition-all duration-200 cursor-pointer overflow-hidden bg-white ${colorClass} ${
+                      isPlaying 
+                        ? 'scale-95 ring-4 ring-offset-2 ring-amber-400 animate-pulse' 
+                        : 'active:scale-95 hover:shadow-md'
+                    }`}
+                  >
+                  <button
+                    onClick={(e) => openDeleteConfirm(e, item.id, item.audio_url)}
+                    className="absolute top-3 right-3 w-7 h-7 bg-red-400 hover:bg-red-500 rounded-full flex items-center justify-center text-xs text-black hover:text-red-500 shadow-sm transition-colors z-10"
+                    title="삭제"
+                  >
+                    ✕
+                  </button>
+
                   {isPlaying && (
-                    <span className="absolute top-3 right-3 text-lg animate-bounce">
-                      ♬
+                    <span className="absolute top-3 left-3 text-lg animate-bounce">
+                      🎶
                     </span>
                   )}
 
@@ -117,13 +146,38 @@ export default function SoundBoxPage() {
                   <span className="font-extrabold text-xl tracking-tight">
                     {isPlaying ? '재생 중!' : item.title}
                   </span>
-                </button>
+                </div>
               )
             })}
           </div>
         )}
 
       </div>
+
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 backdrop-blur-xs">
+          <div className="bg-white w-full max-w-xs rounded-2xl p-6 shadow-xl text-center flex flex-col gap-4 animate-in fade-in zoom-in duration-200">
+            <div>
+              <p className="font-extrabold text-gray-800 text-base">소리를 삭제하시겠어요?</p>
+              <p className="text-xs text-gray-400 mt-1">삭제된 소리는 복구할 수 없어요.</p>
+            </div>
+            <div className="flex gap-2 mt-2">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-bold rounded-xl transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-xl transition-colors shadow-sm"
+              >
+                삭제하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
