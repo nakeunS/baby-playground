@@ -1,5 +1,6 @@
 'use client'
 
+import { CassetteTape } from "lucide-react";
 import { useState, useRef } from 'react'
 import { uploadAndSaveSound } from '@/app/actions/sound'
 
@@ -77,8 +78,8 @@ export default function SoundRecorder({ familyId, onSoundAdded }: SoundRecorderP
 
   return (
     <div className="bg-white p-6 rounded-2xl border border-amber-200 shadow-sm mb-6">
-      <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-        🎙️ 우리가족 목소리 녹음하기
+      <h2 className="text-lg font-bold text-center text-gray-800 mb-4 flex flex-col items-center justify-center gap-2 w-full">
+        우리가족 목소리 녹음하기
       </h2>
 
       <div className="flex flex-col gap-4">
@@ -89,7 +90,7 @@ export default function SoundRecorder({ familyId, onSoundAdded }: SoundRecorderP
               onClick={startRecording}
               className="flex-1 py-3 bg-red-400 hover:bg-red-500 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
-              녹음 시작
+              <CassetteTape size={20} /> 녹음 시작
             </button>
           ) : (
             <button

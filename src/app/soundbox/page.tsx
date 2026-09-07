@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Trash } from "lucide-react";
 import SoundRecorder from '@/components/SoundRecorder'
 import { getSoundBoxData, deleteSound, SoundItem } from '@/app/actions/sound'
 
@@ -130,12 +131,12 @@ export default function SoundBoxPage() {
                     className="absolute top-3 right-3 w-7 h-7 bg-red-400 hover:bg-red-500 rounded-full flex items-center justify-center text-xs text-black hover:text-red-500 shadow-sm transition-colors z-10"
                     title="삭제"
                   >
-                    ✕
+                    <Trash size={20} />
                   </button>
 
                   {isPlaying && (
                     <span className="absolute top-3 left-3 text-lg animate-bounce">
-                      🎶
+                      ♬
                     </span>
                   )}
 
