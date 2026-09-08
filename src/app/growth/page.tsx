@@ -2,6 +2,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { Sprout } from 'lucide-react'
+
 
 type PostType = {
   id: string
@@ -59,9 +61,12 @@ export default async function GrowthGridPage() {
       <div className="max-w-md mx-auto bg-white rounded-xl border border-gray-100 min-h-[80vh] pb-4">
         
         <div className="flex items-center justify-between p-4 border-b border-gray-100 sticky top-14 bg-[#FFF9F2] z-40">
-          <h1 className="font-extrabold text-gray-800 text-lg">성장기록</h1>
+          <h1 className="flex items-center gap-1.5 font-extrabold text-gray-800 text-lg">
+            <Sprout className="w-5 h-5 text-green-800" /> 성장기록
+          </h1>
           {isOwner && (
-            <Link href="/growth/new" className="text-sm font-bold text-amber-500 bg-amber-50 py-1.5 rounded-full transition-colors hover:bg-amber-100">
+            <Link href="/growth/new" 
+            className="text-sm font-bold text-amber-600 bg-white border border-amber-200 py-2 px-4 rounded-lg shadow-sm hover:bg-amber-50 transition-colors">
               + 기록하기
             </Link>
           )}

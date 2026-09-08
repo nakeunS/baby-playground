@@ -8,6 +8,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { supabaseUrl, supabaseKey } from '@/lib/supabase/config'
 import { createPost } from '@/app/actions/post'
 import { default as NextImage } from 'next/image'
+import { ChevronLeft } from 'lucide-react'
 
 type CropArea = {
   x: number;
@@ -167,10 +168,10 @@ export default function GrowthWritePage() {
     <main className="fixed inset-0 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
       <Link href="/growth" className="absolute top-4 right-4 sm:top-6 sm:right-8 text-white text-3xl font-light hover:text-gray-300 transition-colors z-50">✕</Link>
 
-      <div className={`bg-white rounded-xl overflow-hidden flex flex-col shadow-2xl transition-all duration-300 ${step === 3 ? 'w-full max-w-5xl h-[80vh]' : 'w-full max-w-2xl h-[70vh]'}`}>
+      <div className={`bg-white rounded-lg overflow-hidden flex flex-col shadow-2xl transition-all duration-300 ${step === 3 ? 'w-full max-w-5xl h-[80vh]' : 'w-full max-w-2xl h-[70vh]'}`}>
         
         <div className="flex items-center justify-between px-4 h-12 border-b border-gray-200 bg-white z-10 shrink-0">
-          <button onClick={handleBack} disabled={isUploading} className="text-xl text-gray-800 hover:text-gray-500 p-1 disabled:opacity-30">←</button>
+          <button onClick={handleBack} disabled={isUploading} className="text-xl text-gray-800 hover:text-gray-500 p-1 disabled:opacity-30"><ChevronLeft className="w-5 h-5" /></button>
           <h1 className="font-extrabold text-gray-900 text-base">{getHeaderTitle()}</h1>
           {step === 1 ? <div className="w-6" /> : (
             <button 
@@ -210,7 +211,7 @@ export default function GrowthWritePage() {
                   </div>
                 )}
                 {mediaTypes[currentIndex] === 'image' && (
-                  <button onClick={() => { setShowRatioMenu(!showRatioMenu); setShowMultiMenu(false); }} className="w-10 h-10 rounded-full bg-black/60 text-white flex items-center justify-center shadow-md">⧉</button>
+                  <button onClick={() => { setShowRatioMenu(!showRatioMenu); setShowMultiMenu(false); }} className="w-10 h-10 rounded-lg bg-black/60 text-white flex items-center justify-center shadow-md">⧉</button>
                 )}
               </div>
 

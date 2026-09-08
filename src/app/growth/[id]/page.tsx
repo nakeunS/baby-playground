@@ -8,6 +8,7 @@ import LikeButton from '@/components/LikeButton'
 import CommentSection from '@/components/CommentSection'
 import { deletePost } from '@/app/actions/post'
 import DeleteButton from '@/components/DeleteButton'
+import { ChevronLeft, Edit3 } from 'lucide-react'
 
 type CommentType = {
   id: string
@@ -108,9 +109,11 @@ export default async function GrowthDetailPage({ params }: { params: Promise<{ i
               <p className="font-bold text-sm text-gray-900">{author?.display_name || '알 수 없음'}</p>
               
               {isOwner && (
-                <div className="flex items-center gap-3 ml-auto text-xs font-medium">
-                  <Link href={`/growth/${post.id}/edit`} className="text-gray-400 hover:text-amber-500">
-                    수정
+                <div className="flex items-center gap-2 ml-auto">
+                  <Link 
+                    href={`/growth/${post.id}/edit`} 
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition-colors">
+                    <Edit3 className="w-3.5 h-3.5" /> 수정
                   </Link>
                   <DeleteButton onDeleteAction={handleDelete} />
                 </div>
@@ -163,12 +166,16 @@ export default async function GrowthDetailPage({ params }: { params: Promise<{ i
       <main className="flex md:hidden flex-col min-h-screen bg-white pt-15 pb-24">
         <div className="flex items-center justify-between px-4 h-14 border-b border-gray-100 bg-white sticky top-0 z-30">
           <div className="flex items-center gap-3">
-            <Link href="/growth" className="text-sm text-gray-800 font-bold">←</Link>
+            <Link href="/growth" className="text-sm text-gray-800 font-bold"><ChevronLeft className="w-5 h-5" /></Link>
             <span className="font-extrabold text-sm text-gray-900">게시물</span>
           </div>
           {isOwner && (
-            <div className="flex items-center gap-3 text-xs font-semibold">
-              <Link href={`/growth/${post.id}/edit`} className="text-gray-500">수정</Link>
+            <div className="flex items-center gap-2 text-xs font-semibold">
+              <Link 
+                href={`/growth/${post.id}/edit`} 
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition-colors">
+                <Edit3 className="w-3.5 h-3.5" /> 수정
+              </Link>
               <DeleteButton onDeleteAction={handleDelete} />
             </div>
           )}
