@@ -1,5 +1,5 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { getPost } from '@/app/actions/post'
+import { getPost } from '@/data/post'
 import { notFound, redirect } from 'next/navigation'
 import EditPostClient from './EditPostClient'
 

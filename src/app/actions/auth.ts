@@ -212,7 +212,9 @@ export async function joinFamily(formData: FormData) {
 
   await supabase
     .from('family_invites')
-    .update({ is_used: true })
+    .update({ is_used: true,
+              updated_at: new Date().toISOString(),
+     },)
     .eq('id', inviteData.id)
 
   redirect('/')
@@ -229,7 +231,9 @@ export async function updateFamilyName(formData: FormData) {
 
   const { error: updateError } = await supabase
     .from('families')
-    .update({ name: newFamilyName })
+    .update({ name: newFamilyName,
+              updated_at: new Date().toISOString(),
+     })
     .eq('id', profile.family_id)
   
     if( updateError ){
@@ -250,7 +254,9 @@ export async function kickMember(formData: FormData) {
 
   const { error } = await supabase
   .from('profiles')
-  .update({ family_id: null, role: 'member' })
+  .update({ family_id: null, role: 'member',
+            updated_at: new Date().toISOString(),
+   })
   .eq('id', memberId)
 
   if (error) {

@@ -2,7 +2,7 @@ import { createFamily, joinFamily, updateFamilyName, kickMember, getOnboardingDa
 import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import InviteGenerator from './InviteGenerator'
-import SubmitButton from '@/components/SubmitButton'
+import SubmitButton from '@/components/common/SubmitButton'
 
 export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams

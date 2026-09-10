@@ -1,13 +1,13 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { getPost } from '@/app/actions/post'
+import { getPost } from '@/data/post'
 import { notFound, redirect } from 'next/navigation'
-import MediaCarousel from '@/components/MediaCarousel'
+import MediaCarousel from '@/components/post/MediaCarousel'
 import Link from 'next/link'
 import Image from 'next/image'
-import LikeButton from '@/components/LikeButton'
-import CommentSection from '@/components/CommentSection'
+import LikeButton from '@/components/post/LikeButton'
+import CommentSection from '@/components/post/CommentSection'
 import { deletePost } from '@/app/actions/post'
-import DeleteButton from '@/components/DeleteButton'
+import DeleteButton from '@/components/common/DeleteButton'
 import { ChevronLeft, Edit3 } from 'lucide-react'
 
 type CommentType = {

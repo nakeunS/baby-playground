@@ -1,13 +1,13 @@
 import Link from 'next/link'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import UserMenu from '@/components/UserMenu'
+import UserMenu from '@/components/common/UserMenu'
 
 export default async function Header() {
   const supabase = await createSupabaseServerClient()
   const { data: { user } } = supabase ? await supabase.auth.getUser() : { data: { user: null } }
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-14 bg-white/80 backdrop-blur-md border-b border-gray-100 z-50 flex items-center justify-between px-4 sm:px-8">
+    <header className="fixed top-0 left-0 right-0 h-14 bg-white border-b border-gray-100 z-50 flex items-center justify-between px-4 sm:px-8">
       <Link href="/" className="font-extrabold text-amber-500 text-lg tracking-tight">
         BABY PLAYGROUND
       </Link>

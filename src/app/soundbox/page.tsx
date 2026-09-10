@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Trash } from "lucide-react";
-import SoundRecorder from '@/components/SoundRecorder'
+import SoundRecorder from '@/components/sound/SoundRecorder'
 import { getSoundBoxData, deleteSound, SoundItem } from '@/app/actions/sound'
 
 export default function SoundBoxPage() {

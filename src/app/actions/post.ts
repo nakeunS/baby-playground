@@ -56,52 +56,16 @@ export async function createPost(imageUrl: string, content: string) {
   revalidatePath('/')
 }
 
-export async function getPost(id: string) {
-  const supabase = await getSupabase()
-
-  const { data, error } = await supabase
-    .from('posts')
-    .select(`
-      id,
-      image_url,
-      content,
-      created_at,
-      author_id,
-      profiles ( display_name, avatar_url ),
-      likes ( 
-        user_id,
-        profiles:user_id ( display_name, avatar_url )  
-      ),
-      comments (
-        id,
-        content,
-        created_at,
-        parent_id,
-        user_id,
-        profiles:user_id ( display_name, avatar_url )
-      )
-    `)
-    .eq('id', id)
-    .single()
-
-  if (error || !data) {
-    console.log("상세 페이지 조회 에러:", error)
-    return null
-  }
-
-  return data
-}
-
 export async function updatePostWithMedia(postId: string, newContent: string, mediaUrls: string[]) {
   const { supabase } = await requireFamilyOwner()
-
   const image_url = mediaUrls.join(',')
 
   const { error } = await supabase
     .from('posts')
     .update({ 
       content: newContent,
-      image_url: image_url 
+      image_url: image_url,
+      updated_at: new Date().toISOString(),
     })
     .eq('id', postId)
 
@@ -131,10 +95,7 @@ export async function deletePost(postId: string, imageUrls: string | null) {
   await supabase.from('likes').delete().eq('post_id', postId)
   await supabase.from('comments').delete().eq('post_id', postId)
 
-  const { error } = await supabase
-    .from('posts')
-    .delete()
-    .eq('id', postId)
+  const { error } = await supabase.from('posts').delete().eq('id', postId)
 
   if (error) {
     throw new Error(`게시물 삭제 실패: ${error.message}`)
@@ -146,7 +107,6 @@ export async function deletePost(postId: string, imageUrls: string | null) {
 
 export async function toggleLike(postId: string) {
   const supabase = await getSupabase()
-
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: '로그인이 필요합니다.' }
 
@@ -158,18 +118,10 @@ export async function toggleLike(postId: string) {
     .single()
 
   if (existingLike) {
-    const { error } = await supabase
-      .from('likes')
-      .delete()
-      .eq('post_id', postId)
-      .eq('user_id', user.id)
-
+    const { error } = await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', user.id)
     if (error) return { error: error.message }
   } else {
-    const { error } = await supabase
-      .from('likes')
-      .insert({ post_id: postId, user_id: user.id })
-
+    const { error } = await supabase.from('likes').insert({ post_id: postId, user_id: user.id })
     if (error) return { error: error.message }
   }
 
@@ -179,10 +131,8 @@ export async function toggleLike(postId: string) {
 
 export async function addComment(postId: string, content: string, parentId?: string | null) {
   const supabase = await getSupabase()
-
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: '로그인이 필요합니다.' }
-
   if (!content.trim()) return { error: '댓글 내용을 입력해주세요.' }
 
   const { error } = await supabase
@@ -202,15 +152,16 @@ export async function addComment(postId: string, content: string, parentId?: str
 
 export async function updateComment(commentId: string, postId: string, newContent: string) {
   const supabase = await getSupabase()
-
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: '로그인이 필요합니다.' }
-
   if (!newContent.trim()) return { error: '내용을 입력해주세요.' }
 
   const { error } = await supabase
     .from('comments')
-    .update({ content: newContent.trim() })
+    .update({ 
+      content: newContent.trim(),
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', commentId)
     .eq('user_id', user.id)
 
@@ -222,7 +173,6 @@ export async function updateComment(commentId: string, postId: string, newConten
 
 export async function deleteComment(commentId: string, postId: string) {
   const supabase = await getSupabase()
-
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: '로그인이 필요합니다.' }
 

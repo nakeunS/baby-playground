@@ -15,6 +15,7 @@ export default function BottomNav() {
     { label: '홈', href: '/', icon: '/home.png' },
     { label: '성장기록', href: '/growth', icon: '/camera.png' },
     { label: '사운드', href: '/soundbox', icon: '/sound.png' },
+    { label: '리뷰', href: '/reviews', icon: '/review.png' },
     { label: '동화책', href: '/storybook', icon: '/book.png' },
     { label: '한글', href: '/korean', icon: '/hangul.png' },
   ]

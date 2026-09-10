@@ -30,6 +30,17 @@ export default async function HomePage() {
       isReady: true,
     },
     {
+      id: 'reviews',
+      title: '리뷰',
+      subtitle: '아이템, 나들이 리뷰',
+      icon: '/review.png',
+      href: user ? '/reviews' : '/auth/login?error=로그인이+필요한+메뉴입니다',
+      isLocked: false,
+      footerLabel: '추천 리뷰',
+      footerText: user ? '리뷰' : '로그인이 필요해요',
+      isReady: true,
+    },
+    {
       id: 'storybook',
       title: '동화책',
       subtitle: '읽어주는 이야기',
