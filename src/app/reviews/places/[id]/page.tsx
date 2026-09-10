@@ -1,3 +1,5 @@
+import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 import { getReviewPlaceById } from '@/data/review'
 import { deleteReviewPlace } from '@/app/actions/review'
 import Link from 'next/link'
@@ -11,6 +13,10 @@ interface PageProps {
 
 export default async function PlaceDetailPage({ params }: PageProps) {
   const { id } = await params
+  const supabase = await createSupabaseServerClient()
+    if (!supabase) redirect('/auth/login')
+  
+    const { data: { user } } = await supabase.auth.getUser()
 
   let place = null
   let errorMessage = ''
@@ -45,6 +51,7 @@ export default async function PlaceDetailPage({ params }: PageProps) {
   const formattedDate = place.created_at ? new Date(place.created_at).toISOString().split('T')[0] : ''
   const visitedDate = place.visited_at ? new Date(place.visited_at).toISOString().split('T')[0] : ''
   const authorName = place.profiles?.display_name || '익명'
+  const isOwner = user?.id === place.user_id
   const isParkingAvailable = String(place.has_parking) === "true";
   const isRevisitIntended = String(place.will_revisit) === "true";
 
@@ -60,15 +67,17 @@ export default async function PlaceDetailPage({ params }: PageProps) {
           <Link href="/reviews?tab=places" className="flex items-center gap-1 text-xs font-bold text-gray-700 hover:text-black">
             <ChevronLeft className="w-5 h-5" /> 리뷰 목록
           </Link>
-          <div className="flex items-center gap-2">
-            <Link 
-              href={`/reviews/places/${id}/edit`}
-              className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition-colors"
-            >
-              <Edit3 className="w-3.5 h-3.5" /> 수정
-            </Link>
-            <DeleteButton onDeleteAction={handleDelete} />
-          </div>
+          {isOwner && (
+            <div className="flex items-center gap-2">
+              <Link 
+                href={`/reviews/places/${id}/edit`}
+                className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition-colors"
+              >
+                <Edit3 className="w-3.5 h-3.5" /> 수정
+              </Link>
+              <DeleteButton onDeleteAction={handleDelete} />
+            </div>
+          )}
         </div>
 
         {/* 이미지 스와이프 영역 */}

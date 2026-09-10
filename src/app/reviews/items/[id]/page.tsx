@@ -1,3 +1,5 @@
+import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 import { getReviewItemById } from '@/data/review'
 import { deleteReviewItem } from '@/app/actions/review'
 import Link from 'next/link'
@@ -11,6 +13,10 @@ interface ItemDetailPageProps {
 
 export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
   const { id } = await params
+  const supabase = await createSupabaseServerClient()
+    if (!supabase) redirect('/auth/login')
+  
+    const { data: { user } } = await supabase.auth.getUser()
   
   let item = null
   let errorMessage = ''
@@ -44,6 +50,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
 
   const formattedDate = item.created_at ? new Date(item.created_at).toISOString().split('T')[0] : ''
   const authorName = item.profiles?.display_name || '익명'
+  const isOwner = user?.id === item.user_id
   
   const formatPrice = (priceVal: string | number | null) => {
     if (!priceVal) return null
@@ -65,15 +72,17 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
           <Link href="/reviews" className="flex items-center gap-1 text-xs font-bold text-gray-700 hover:text-black">
             <ChevronLeft className="w-5 h-5" /> 리뷰 목록
           </Link>
-          <div className="flex items-center gap-2">
-            <Link 
-              href={`/reviews/items/${id}/edit`}
-              className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition-colors"
-            >
-              <Edit3 className="w-3.5 h-3.5" /> 수정
-            </Link>
-              <DeleteButton onDeleteAction={handleDelete} />
-          </div>
+          {isOwner && (
+            <div className="flex items-center gap-2">
+              <Link 
+                href={`/reviews/items/${id}/edit`}
+                className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition-colors"
+              >
+                <Edit3 className="w-3.5 h-3.5" /> 수정
+              </Link>
+                <DeleteButton onDeleteAction={handleDelete} />
+            </div>
+          )}
         </header>
 
         <div className="relative w-full aspect-square bg-gray-100 flex overflow-x-auto snap-x snap-mandatory scrollbar-hide">
