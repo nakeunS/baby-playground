@@ -77,67 +77,70 @@ export default function NewItemPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">카테고리 <span className="text-[#e57632]" aria-label="필수 입력">*</span></label>
-            <select 
-              name="category"
-              defaultValue="수유/이유식"
-              className="w-full rounded-md border border-[#d8cfc2] bg-[#fbfaf7] px-4 py-3 text-base text-gray-700 font-normal outline-none transition focus:border-[#e57632] focus:bg-white"
-            >
-              <option value="수유/이유식">수유/이유식</option>
-              <option value="아기가구">아기가구</option>
-              <option value="의류">의류</option>
-              <option value="외출/유모차">외출/유모차</option>
-              <option value="장난감/도서">장난감/도서</option>
-              <option value="위생/목욕">위생/목욕</option>
-              <option value="가전/기타">가전/기타</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">상품 이름<span className="text-[#e57632]" aria-label="필수 입력">*</span></label>
+            <label className="block text-xs font-bold text-gray-700 mb-1">
+              리뷰 제목<span className="text-[#e57632]" aria-label="필수 입력">*</span></label>
             <input 
               type="text" 
               name="title"
               placeholder="예: 국민 모빌, 아기 젖병 등" 
-              className="w-full rounded-md border border-[#d8cfc2] bg-[#fbfaf7] px-4 py-3 text-base text-gray-700 font-normal outline-none transition focus:border-[#e57632] focus:bg-white"
+              className="w-full p-3 border text-black border-[#d8cfc2] bg-[#fbfaf7] rounded-lg text-sm focus:outline-amber-500"
               required
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">참고 가격<span className="text-[#e57632]" aria-label="필수 입력">*</span></label>
-              <input 
-                type="text" 
-                name="price"
-                placeholder="예: 35,000" 
-                onChange={handlePriceChange}
-                className="w-full rounded-md border border-[#d8cfc2] bg-[#fbfaf7] px-4 py-3 text-base text-gray-700 font-normal outline-none transition focus:border-[#e57632] focus:bg-white"
-              />
+              <label className="block text-xs font-bold text-gray-700 mb-1">
+                카테고리 <span className="text-[#e57632]" aria-label="필수 입력">*</span></label>
+              <select 
+                name="category"
+                defaultValue="수유/이유식"
+                className="w-full p-2.5 border text-black border-[#d8cfc2] bg-[#fbfaf7] rounded-lg text-xs focus:outline-amber-500"
+              >
+                <option value="수유/이유식">수유/이유식</option>
+                <option value="아기가구">아기가구</option>
+                <option value="의류">의류</option>
+                <option value="외출/유모차">외출/유모차</option>
+                <option value="장난감/도서">장난감/도서</option>
+                <option value="위생/목욕">위생/목욕</option>
+                <option value="가전/기타">가전/기타</option>
+              </select>
             </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">만족도 별점<span className="text-[#e57632]" aria-label="필수 입력">*</span></label>
+              <select 
+                name="rating" 
+                defaultValue="5"
+                className="w-full p-2.5 border text-black border-[#d8cfc2] bg-[#fbfaf7] rounded-lg text-xs focus:outline-amber-500"
+              >
+                <option value="5">★ 5 (최고)</option>
+                <option value="4">★ 4 (좋음)</option>
+                <option value="3">★ 3 (보통)</option>
+                <option value="2">★ 2 (별로)</option>
+                <option value="1">★ 1 (실망)</option>
+              </select>
+            </div>
+
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1">구매일<span className="text-[#e57632]" aria-label="필수 입력">*</span></label>
               <input 
                 type="date" 
                 name="purchaseDate"
-                className="w-full rounded-md border border-[#d8cfc2] bg-[#fbfaf7] px-4 py-3 text-base text-gray-700 font-normal outline-none transition focus:border-[#e57632] focus:bg-white"
+                className="w-full p-2.5 border text-black border-[#d8cfc2] bg-[#fbfaf7] rounded-lg text-xs focus:outline-amber-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">만족도 별점<span className="text-[#e57632]" aria-label="필수 입력">*</span></label>
-            <select 
-              name="rating" 
-              defaultValue="5"
+            <label className="block text-xs font-bold text-gray-700 mb-1">참고 가격<span className="text-[#e57632]" aria-label="필수 입력">*</span></label>
+            <input 
+              type="text" 
+              name="price"
+              placeholder="예: 35,000" 
+              onChange={handlePriceChange}
               className="w-full rounded-md border border-[#d8cfc2] bg-[#fbfaf7] px-4 py-3 text-base text-gray-700 font-normal outline-none transition focus:border-[#e57632] focus:bg-white"
-            >
-              <option value="5">★ 5 (최고)</option>
-              <option value="4">★ 4 (좋음)</option>
-              <option value="3">★ 3 (보통)</option>
-              <option value="2">★ 2 (별로)</option>
-              <option value="1">★ 1 (실망)</option>
-            </select>
+            />
           </div>
 
           <div>

@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { Baby, Car } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { RecommendItem, RecommendPlace } from '@/data/review'
+import type { RecommendItem, RecommendPlace } from '@/data/review'
 
 interface ReviewClientViewProps {
   initialItems: RecommendItem[]

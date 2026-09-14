@@ -1,5 +1,3 @@
-"use server"
-
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
@@ -8,11 +6,13 @@ export type RecommendItem = {
   title: string
   price: string | null
   image_url: string | null
+  image_urls?: string[] | null
   product_link: string | null
   category: string | null
   content: string | null
-  rating: number | null
-  created_at: string | null
+  rating: number
+  created_at: string
+  purchase_date: string
   profiles: { display_name: string | null; avatar_url: string | null } | null
 }
 
@@ -37,12 +37,76 @@ export type RecommendPlace = {
   updated_at: string;
 };
 
+export type SelectedPlaceData = {
+  storeName: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  placeId: string;
+  mapUrl: string;
+  photoUrl?: string;
+};
+
+export type ReviewSort = "created-desc" | "rating-desc";
+
 async function getSupabase() {
   const supabase = await createSupabaseServerClient()
   if (!supabase) {
     redirect(`/auth/login?error=${encodeURIComponent('서버 연결 오류가 발생했습니다.')}`)
   }
   return supabase
+}
+
+function sortByItemCreatedAtDesc(a: RecommendItem, b: RecommendItem) {
+  return (
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime() ||
+    new Date(b.rating).getTime() - new Date(a.rating).getTime() ||
+    a.title.localeCompare(b.title)
+  );
+}
+
+function sortByItemRatingDesc(a: RecommendItem, b: RecommendItem) {
+  return (
+    b.rating - a.rating ||
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime() ||
+    a.title.localeCompare(b.title)
+  );
+}
+
+function sortByPlaceCreatedAtDesc(a: RecommendPlace, b: RecommendPlace) {
+  return (
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime() ||
+    new Date(b.rating).getTime() - new Date(a.rating).getTime() ||
+    a.title.localeCompare(b.title)
+  );
+}
+
+function sortByPlaceRatingDesc(a: RecommendPlace, b: RecommendPlace) {
+  return (
+    b.rating - a.rating ||
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime() ||
+    a.title.localeCompare(b.title)
+  );
+}
+
+export function sortItemReviews(reviews: RecommendItem[], sort: ReviewSort) {
+  const sortedReviews = [...reviews];
+
+  if (sort === "rating-desc") {
+    return sortedReviews.sort(sortByItemRatingDesc);
+  }
+
+  return sortedReviews.sort(sortByItemCreatedAtDesc);
+}
+
+export function sortPlaceReviews(reviews: RecommendPlace[], sort: ReviewSort) {
+  const sortedReviews = [...reviews];
+
+  if (sort === "rating-desc") {
+    return sortedReviews.sort(sortByPlaceRatingDesc);
+  }
+
+  return sortedReviews.sort(sortByPlaceCreatedAtDesc);
 }
 
 export async function getReview(): Promise<{ items: RecommendItem[]; places: RecommendPlace[] }> {

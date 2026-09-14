@@ -1,10 +1,10 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { getReviewPlaceById } from '@/data/review'
+import { getReview, sortPlaceReviews, getReviewPlaceById, type RecommendPlace } from '@/data/review'
 import { deleteReviewPlace } from '@/app/actions/review'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ChevronLeft, Edit3, MapPin, ExternalLink, Calendar, User, Store, Car, RotateCw, Star } from 'lucide-react'
+import { ChevronLeft, Edit3, MapPin, ExternalLink, Calendar, User, Store, Car, RotateCw, Star, ArrowLeft, ArrowRight, } from 'lucide-react'
 import DeleteButton from '@/components/common/DeleteButton'
 
 interface PageProps {
@@ -54,6 +54,14 @@ export default async function PlaceDetailPage({ params }: PageProps) {
   const isOwner = user?.id === place.user_id
   const isParkingAvailable = String(place.has_parking) === "true";
   const isRevisitIntended = String(place.will_revisit) === "true";
+
+  const orderedItems = sortPlaceReviews(
+      (await getReview()).places,
+      "created-desc",
+    );
+  const currentIndex = orderedItems.findIndex((review) => review.id === place.id);
+  const previousItem = currentIndex >= 0 ? orderedItems[currentIndex + 1] : undefined;
+  const nextItem = currentIndex > 0 ? orderedItems[currentIndex - 1] : undefined;
 
   const handleDelete = async () => {
     'use server'
@@ -221,9 +229,90 @@ export default async function PlaceDetailPage({ params }: PageProps) {
             </p>
           </div>
 
+          {previousItem || nextItem ? (
+              <nav aria-label="리뷰 이전 다음 글" className="mt-8 grid gap-4 sm:grid-cols-2">
+                {previousItem ? (
+                  <ReviewAdjacentCard
+                    item={previousItem}
+                    label="이전 리뷰"
+                    direction="previous"
+                  />
+                ) : (
+                  <div className="hidden sm:block" />
+                )}
+                {nextItem ? (
+                  <ReviewAdjacentCard
+                    item={nextItem}
+                    label="다음 리뷰"
+                    direction="next"
+                  />
+                ) : null}
+              </nav>
+            ) : null}
         </div>
+
 
       </div>
     </main>
   )
+}
+
+function ReviewAdjacentCard({
+  item,
+  label,
+  direction,
+}: {
+  item: RecommendPlace;
+  label: string;
+  direction: "previous" | "next";
+}) {
+  const Icon = direction === "previous" ? ArrowLeft : ArrowRight;
+  const title = item.title;
+
+  const images: string[] = item.image_url 
+      ? item.image_url.split(',') 
+      : ['/placeholder.svg']
+
+  return (
+    <Link
+      href={`/reviews/places/${item.id}`}
+      className="group grid grid-cols-[88px_1fr] overflow-hidden rounded-lg border border-[#ddd6cc] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+    >
+      <div className="relative w-full aspect-square bg-gray-100 flex overflow-x-auto snap-x snap-mandatory scrollbar-hide">
+          {images.map((img: string, idx: number) => (
+            <div key={idx} className="w-full h-full shrink-0 snap-center relative">
+              <Image src={img} alt={`${item.title} 사진 ${idx + 1}`} fill unoptimized className="object-cover" />
+            </div>
+          ))}
+        </div>
+      <div className="min-w-0 p-4">
+        <p className="flex items-center gap-1.5 text-xs font-bold text-[#e57632]">
+          {direction === "previous" ? <Icon size={14} /> : null}
+          {label}
+          {direction === "next" ? <Icon size={14} /> : null}
+        </p>
+        <h2 className="mt-2 line-clamp-2 font-bold leading-6 text-[#17202a] transition group-hover:text-[#e57632]">
+          {title}
+        </h2>
+        <div className="mt-2 flex flex-wrap items-center gap-3 text-xs font-semibold text-[#6b7280]">
+          <span>{formatFullDate(item.created_at)}</span>
+          <span className="flex items-center gap-1">
+            <Star size={13} fill="#f2b84b" color="#f2b84b" />
+            {item.rating}
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function formatFullDate(value: string) {
+  if (!value) return "";
+  if (/^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10);
+
+  return new Intl.DateTimeFormat("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(value));
 }
