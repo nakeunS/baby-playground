@@ -164,6 +164,7 @@ export default function PlaceForm({ placeReview }: PlaceFormProps) {
             name="rating" 
             defaultValue="5"
             className="w-full rounded-md border border-[#d8cfc2] bg-[#fbfaf7] px-4 py-3 text-base text-gray-700 font-normal outline-none transition focus:border-[#e57632] focus:bg-white"
+            required
           >
             <option value="5">★ 5</option>
             <option value="4">★ 4</option>

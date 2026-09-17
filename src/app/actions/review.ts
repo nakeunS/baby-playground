@@ -56,10 +56,12 @@ export async function createReviewItem(formData: FormData) {
 
   for (const file of imageFiles) {
     if (file.size > 0) {
-      const fileName = `${user.id}-${Date.now()}-${file.name}`
+      const fileExt = file.name.split('.').pop() || 'png'
+      const safeFileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`
+      
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('review-images')
-        .upload(fileName, file)
+        .upload(safeFileName, file)
 
       if (uploadError) {
         throw new Error('이미지 업로드 실패: ' + uploadError.message)
@@ -125,10 +127,12 @@ export async function updateReviewItem(id: string, formData: FormData) {
 
   for (const file of newImageFiles) {
     if (file && file.size > 0) {
-      const fileName = `${user.id}-${Date.now()}-${file.name}`
+      const fileExt = file.name.split('.').pop() || 'png'
+      const safeFileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`
+
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('review-images')
-        .upload(fileName, file)
+        .upload(safeFileName, file)
 
       if (uploadError) {
         throw new Error('이미지 업로드 실패: ' + uploadError.message)
@@ -250,10 +254,11 @@ export async function createReviewPlace(formData: FormData) {
 
   for (const file of imageFiles) {
     if (file && file.size > 0) {
-      const fileName = `${user.id}-${Date.now()}-${file.name}`
+      const fileExt = file.name.split('.').pop() || 'png'
+      const safeFileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('review-images')
-        .upload(fileName, file)
+        .upload(safeFileName, file)
 
       if (uploadError) {
         throw new Error('이미지 업로드 실패: ' + uploadError.message)
@@ -328,10 +333,11 @@ export async function updateReviewPlace(id: string, formData: FormData) {
 
   for (const file of newImageFiles) {
     if (file && file.size > 0) {
-      const fileName = `${user.id}-${Date.now()}-${file.name}`
+      const fileExt = file.name.split('.').pop() || 'png'
+      const safeFileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('review-images')
-        .upload(fileName, file)
+        .upload(safeFileName, file)
 
       if (uploadError) {
         throw new Error('이미지 업로드 실패: ' + uploadError.message)
