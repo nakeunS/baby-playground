@@ -94,15 +94,29 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
         </header>
 
         <div className="relative w-full aspect-square bg-gray-100 flex overflow-x-auto snap-x snap-mandatory scrollbar-hide">
-          {images.map((img: string, idx: number) => (
-            <div key={idx} className="w-full h-full shrink-0 snap-center relative">
-              <Image src={img} alt={`${item.title} 사진 ${idx + 1}`} fill unoptimized className="object-cover" />
+          {!images || images.length === 0 ? (
+            <div className="w-full h-full shrink-0 snap-center relative">
+              <Image 
+                src="/placeholder.svg"
+                alt={`${item.title} 기본 이미지`} 
+                fill 
+                unoptimized 
+                className="object-cover" 
+              />
             </div>
-          ))}
-          {images.length > 1 && (
-            <div className="absolute bottom-3 right-3 bg-black/50 text-white text-[10px] px-2 py-1 rounded-full font-medium">
-              여러 장 스와이프
-            </div>
+          ) : (
+            <>
+              {images.map((img: string, idx: number) => (
+                <div key={idx} className="w-full h-full shrink-0 snap-center relative">
+                  <Image src={img} alt={`${item.title} 사진 ${idx + 1}`} fill unoptimized className="object-cover" />
+                </div>
+              ))}
+              {images.length > 1 && (
+                <div className="absolute bottom-3 right-3 bg-black/50 text-white text-[10px] px-2 py-1 rounded-full font-medium">
+                  여러 장 스와이프
+                </div>
+              )}
+            </>
           )}
         </div>
 

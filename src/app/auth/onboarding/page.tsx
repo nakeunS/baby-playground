@@ -27,7 +27,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
             <section className="bg-white p-6 rounded-xl border border-amber-200 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-amber-400" />
               <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                👑 방장 메뉴
+                👑 가장 메뉴
               </h2>
               
               <form action={updateFamilyName} className="flex gap-2 mb-4">

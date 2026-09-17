@@ -166,6 +166,17 @@ export default function EditItemForm({ id, item }: EditItemFormProps) {
         />
       </div>
 
+      <div>
+        <label className="block text-xs font-bold text-gray-700 mb-1">구매 링크<span className="text-[#e57632]" aria-label="필수 입력">*</span></label>
+        <input 
+          type="url" 
+          name="productLink"
+          defaultValue={item.product_link ? item.product_link : ''}
+          placeholder="https://..." 
+          className="w-full rounded-md border border-[#d8cfc2] bg-[#fbfaf7] px-4 py-3 text-base text-gray-700 font-normal outline-none transition focus:border-[#e57632] focus:bg-white"
+        />
+      </div>
+
       <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg space-y-2">
         <div className="flex items-center justify-between">
           <label className="text-xs font-bold text-gray-700">상품 사진 관리 (여러 장 가능)</label>

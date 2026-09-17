@@ -45,6 +45,10 @@ export default function NewItemPage() {
     try {
       await createReviewItem(formData)
     } catch (error: unknown) {
+      if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
+        return 
+      }
+
       if (error instanceof Error) {
         alert(error.message)
       } else {
@@ -128,6 +132,7 @@ export default function NewItemPage() {
                 type="date" 
                 name="purchaseDate"
                 className="w-full p-2.5 border text-black border-[#d8cfc2] bg-[#fbfaf7] rounded-lg text-xs focus:outline-amber-500"
+                required
               />
             </div>
           </div>
@@ -140,11 +145,12 @@ export default function NewItemPage() {
               placeholder="예: 35,000" 
               onChange={handlePriceChange}
               className="w-full rounded-md border border-[#d8cfc2] bg-[#fbfaf7] px-4 py-3 text-base text-gray-700 font-normal outline-none transition focus:border-[#e57632] focus:bg-white"
+              required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">구매 링크<span className="text-[#e57632]" aria-label="필수 입력">*</span></label>
+            <label className="block text-xs font-bold text-gray-700 mb-1">구매 링크</label>
             <input 
               type="url" 
               name="productLink"
@@ -187,6 +193,7 @@ export default function NewItemPage() {
               name="content"
               rows={4}
               className="w-full rounded-md border border-[#d8cfc2] bg-[#fbfaf7] px-4 py-3 text-base text-gray-700 font-normal outline-none transition focus:border-[#e57632] focus:bg-white resize-none"
+              required
             />
           </div>
 

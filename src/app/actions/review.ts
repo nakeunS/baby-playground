@@ -114,7 +114,7 @@ export async function updateReviewItem(id: string, formData: FormData) {
   const price = formData.get('price') as string
   const rating = Number(formData.get('rating')) || 5
   const purchase_date = formData.get('purchase_date') as string
-  const product_link = formData.get('product_link') as string
+  const productLink = formData.get('productLink') as string
   const content = formData.get('content') as string
   
   const existingImagesJson = formData.get('existing_images') as string
@@ -152,7 +152,7 @@ export async function updateReviewItem(id: string, formData: FormData) {
       price,
       rating,
       purchase_date,
-      product_link,
+      product_link: productLink,
       content,
       image_url: finalImageUrls[0] || '',
       image_urls: finalImageUrls,

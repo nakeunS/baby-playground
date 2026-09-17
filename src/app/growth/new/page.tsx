@@ -135,7 +135,7 @@ export default function GrowthWritePage() {
       const finalImageUrl = uploadedUrls.join(',')
       await createPost(finalImageUrl, content)
 
-      alert('게시물이 성공적으로 업로드되었습니다! 🎉')
+      alert('게시물이 성공적으로 업로드되었습니다!')
       router.push('/growth')
       router.refresh()
     } catch (error) {
