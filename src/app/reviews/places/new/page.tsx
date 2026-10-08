@@ -26,7 +26,6 @@ export default async function NewPlacePage() {
           <h1 className="font-extrabold text-gray-800 text-base">나들이 장소 추천하기</h1>
         </div>
 
-        {/* 클라이언트 컴포넌트 호출 */}
         <PlaceForm />
       </div>
     </main>
